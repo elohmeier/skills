@@ -1,0 +1,31 @@
+import { SceneAppPage, SceneTimePicker, SceneTimeRange } from "@grafana/scenes";
+import { ROUTES } from "../../constants";
+import { prefixRoute } from "../../utils/utils.routing";
+import { roomDetailScene } from "./roomDetailScene";
+import { withDrilldownScene } from "./withDrilldownScene";
+
+export const withDrilldownPage = new SceneAppPage({
+  $timeRange: new SceneTimeRange({ from: "now-6h", to: "now" }),
+  title: "Page with drilldown",
+  subTitle: "Click a room in the table to drill down.",
+  controls: [new SceneTimePicker({ isOnCanvas: true })],
+  url: prefixRoute(ROUTES.WithDrilldown),
+  routePath: `${ROUTES.WithDrilldown}/*`,
+  getScene: withDrilldownScene,
+  drilldowns: [
+    {
+      routePath: "room/:roomName/*",
+      getPage(routeMatch, parent) {
+        const roomName = routeMatch.params.roomName!;
+        return new SceneAppPage({
+          url: `${prefixRoute(ROUTES.WithDrilldown)}/room/${roomName}`,
+          routePath: "room/:roomName/*",
+          title: `${decodeURIComponent(roomName)} details`,
+          subTitle: "Drill-down view for a single room.",
+          getParentPage: () => parent,
+          getScene: () => roomDetailScene(roomName),
+        });
+      },
+    },
+  ],
+});

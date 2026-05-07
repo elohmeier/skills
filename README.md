@@ -16,10 +16,11 @@ npx skills add elohmeier/skills -s typst -a claude-code -g
 
 ## Skills
 
-| Name                  | Purpose                                                |
-| --------------------- | ------------------------------------------------------ |
-| `agent-browser`       | Browser automation via `agent-browser` CLI             |
-| `fabric`              | Fabric.js geometry, rendering, serialization quirks    |
-| `msgvault`            | Search emails in msgvault archive                      |
-| `opendataloader-pdf`  | PDF text/table extraction CLI                          |
-| `typst`               | Typst document authoring and scripting                 |
+| Name                 | Purpose                                             |
+| -------------------- | --------------------------------------------------- |
+| `agent-browser`      | Browser automation via `agent-browser` CLI          |
+| `fabric`             | Fabric.js geometry, rendering, serialization quirks |
+| `msgvault`           | Search emails in msgvault archive                   |
+| `opendataloader-pdf` | PDF text/table extraction CLI                       |
+| `typst`              | Typst document authoring and scripting              |
+| `grafana-scenes-app` | Create Grafana apps                                 |
