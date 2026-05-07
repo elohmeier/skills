@@ -1,0 +1,4 @@
+interface:
+  display_name: "Grafana Dashboard Design"
+  short_description: "Design and edit Grafana dashboards"
+  default_prompt: "Use $grafana-dashboard-design to design or refine a Grafana dashboard for a service."
