@@ -12,7 +12,10 @@
         "name": "instance",
         "type": "query",
         "datasource": { "type": "prometheus", "uid": "$datasource" },
-        "query": { "query": "label_values(node_uname_info, instance)", "refId": "PrometheusVariableQueryEditor-VariableQuery" },
+        "query": {
+          "query": "label_values(node_uname_info, instance)",
+          "refId": "PrometheusVariableQueryEditor-VariableQuery"
+        },
         "refresh": 1,
         "multi": true,
         "includeAll": true
@@ -33,13 +36,23 @@
           "range": true
         }
       ],
-      "options": { "legend": { "showLegend": true, "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi", "sort": "desc" } },
+      "options": {
+        "legend": { "showLegend": true, "displayMode": "list", "placement": "bottom" },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
       "fieldConfig": {
         "defaults": {
           "unit": "percentunit",
           "min": 0,
           "max": 1,
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 0.75 }, { "color": "red", "value": 0.9 }] },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 0.75 },
+              { "color": "red", "value": 0.9 }
+            ]
+          },
           "custom": { "drawStyle": "line", "lineWidth": 1, "fillOpacity": 8, "showPoints": "never" }
         },
         "overrides": []
@@ -58,13 +71,23 @@
           "range": true
         }
       ],
-      "options": { "legend": { "showLegend": true, "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi", "sort": "desc" } },
+      "options": {
+        "legend": { "showLegend": true, "displayMode": "list", "placement": "bottom" },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
       "fieldConfig": {
         "defaults": {
           "unit": "percentunit",
           "min": 0,
           "max": 1,
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 0.8 }, { "color": "red", "value": 0.9 }] },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 0.8 },
+              { "color": "red", "value": 0.9 }
+            ]
+          },
           "custom": { "drawStyle": "line", "lineWidth": 1, "fillOpacity": 8, "showPoints": "never" }
         },
         "overrides": []
@@ -83,8 +106,17 @@
           "range": true
         }
       ],
-      "options": { "legend": { "showLegend": true, "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi", "sort": "desc" } },
-      "fieldConfig": { "defaults": { "unit": "short", "custom": { "drawStyle": "line", "lineWidth": 1, "fillOpacity": 5, "showPoints": "never" } }, "overrides": [] }
+      "options": {
+        "legend": { "showLegend": true, "displayMode": "list", "placement": "bottom" },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": { "drawStyle": "line", "lineWidth": 1, "fillOpacity": 5, "showPoints": "never" }
+        },
+        "overrides": []
+      }
     },
     {
       "type": "timeseries",
@@ -99,11 +131,17 @@
           "range": true
         }
       ],
-      "options": { "legend": { "showLegend": true, "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi", "sort": "desc" } },
+      "options": {
+        "legend": { "showLegend": true, "displayMode": "list", "placement": "bottom" },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
       "fieldConfig": {
         "defaults": {
           "unit": "ops",
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "red", "value": 0.001 }] },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "green", "value": null }, { "color": "red", "value": 0.001 }]
+          },
           "custom": { "drawStyle": "line", "lineWidth": 1, "fillOpacity": 5, "showPoints": "never" }
         },
         "overrides": []

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Grafana"
+  short_description: "Build Grafana dashboards and scenes apps"
+  default_prompt: "Use $grafana to design a Grafana dashboard or build a Grafana app plugin with scenes."

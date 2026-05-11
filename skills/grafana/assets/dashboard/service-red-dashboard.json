@@ -65,7 +65,11 @@
         "graphMode": "area"
       },
       "fieldConfig": {
-        "defaults": { "unit": "reqps", "decimals": 2, "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] } },
+        "defaults": {
+          "unit": "reqps",
+          "decimals": 2,
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] }
+        },
         "overrides": []
       }
     },
@@ -93,7 +97,14 @@
         "defaults": {
           "unit": "percentunit",
           "decimals": 2,
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 0.01 }, { "color": "red", "value": 0.05 }] }
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 0.01 },
+              { "color": "red", "value": 0.05 }
+            ]
+          }
         },
         "overrides": []
       }
@@ -119,7 +130,11 @@
         "graphMode": "area"
       },
       "fieldConfig": {
-        "defaults": { "unit": "s", "decimals": 3, "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] } },
+        "defaults": {
+          "unit": "s",
+          "decimals": 3,
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] }
+        },
         "overrides": []
       }
     },
@@ -141,7 +156,16 @@
         "tooltip": { "mode": "multi", "sort": "desc" }
       },
       "fieldConfig": {
-        "defaults": { "unit": "reqps", "custom": { "drawStyle": "line", "lineInterpolation": "linear", "lineWidth": 1, "fillOpacity": 8, "showPoints": "never" } },
+        "defaults": {
+          "unit": "reqps",
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "fillOpacity": 8,
+            "showPoints": "never"
+          }
+        },
         "overrides": []
       }
     },
@@ -175,7 +199,17 @@
         "tooltip": { "mode": "multi", "sort": "desc" }
       },
       "fieldConfig": {
-        "defaults": { "unit": "s", "decimals": 3, "custom": { "drawStyle": "line", "lineInterpolation": "linear", "lineWidth": 1, "fillOpacity": 5, "showPoints": "never" } },
+        "defaults": {
+          "unit": "s",
+          "decimals": 3,
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "fillOpacity": 5,
+            "showPoints": "never"
+          }
+        },
         "overrides": []
       }
     }

@@ -76,7 +76,7 @@ new EmbeddedScene({
 });
 ```
 
-Variable interpolation in `expr`: use `$varname` or `${varname:format}` (formats: `csv`, `pipe`, `regex`, `json`, etc. — see references/05-variables.md).
+Variable interpolation in `expr`: use `$varname` or `${varname:format}` (formats: `csv`, `pipe`, `regex`, `json`, etc. — see references/scenes/05-variables.md).
 
 ## Per-panel data overrides
 

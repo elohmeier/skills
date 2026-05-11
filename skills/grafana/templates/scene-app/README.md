@@ -55,4 +55,4 @@ The easiest way to get those is `npx @grafana/create-plugin@latest` ➜ **App (w
 
 - Add variables that affect every page: put them on a top-level `SceneVariableSet` and pass it to `SceneApp` (every `SceneAppPage` inherits scope).
 - Share data across tabs: `getScene()` returns a fresh scene per call, so pass a shared query runner via a closure or provide a helper that builds the scene from a shared input.
-- Add behaviors (cursor sync, auto-refresh): see `references/09-behaviors.md`.
+- Add behaviors (cursor sync, auto-refresh): see `references/scenes/09-behaviors.md`.

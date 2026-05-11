@@ -34,7 +34,13 @@
     "fieldConfig": {
       "defaults": {
         "unit": "reqps",
-        "custom": { "drawStyle": "line", "lineInterpolation": "linear", "lineWidth": 1, "fillOpacity": 8, "showPoints": "never" }
+        "custom": {
+          "drawStyle": "line",
+          "lineInterpolation": "linear",
+          "lineWidth": 1,
+          "fillOpacity": 8,
+          "showPoints": "never"
+        }
       },
       "overrides": []
     }
