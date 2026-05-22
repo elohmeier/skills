@@ -26,3 +26,17 @@ npx skills add elohmeier/skills -s typst -a claude-code -g
 | `msgvault`              | Search emails in msgvault archive                   |
 | `opendataloader-pdf`    | PDF text/table extraction CLI                       |
 | `typst`                 | Typst document authoring and scripting              |
+
+## Maintenance
+
+Vendor the `agent-browser` skill from a local upstream checkout:
+
+```bash
+scripts/vendor-agent-browser-skill.sh
+```
+
+By default this reads
+`/var/home/gordon/repos/github.com/vercel-labs/agent-browser/skill-data/core`.
+Pass a checkout path or set `AGENT_BROWSER_REPO` to use another location. The
+script updates that checkout with `git fetch --prune` and a fast-forward-only
+merge before copying.
