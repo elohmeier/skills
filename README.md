@@ -22,6 +22,7 @@ npx skills add elohmeier/skills -s typst -a claude-code -g
 | `fabric`                | Fabric.js geometry, rendering, serialization quirks |
 | `grafana`               | Grafana dashboards and scenes app plugins           |
 | `human-centered-design` | Human-centered design, usability, and UX heuristics |
+| `layerchart`            | LayerChart visualizations for Svelte                |
 | `msgvault`              | Search emails in msgvault archive                   |
 | `opendataloader-pdf`    | PDF text/table extraction CLI                       |
 | `typst`                 | Typst document authoring and scripting              |
