@@ -26,6 +26,7 @@ npx skills add elohmeier/skills -s typst -a claude-code -g
 | `msgvault`              | Search emails in msgvault archive                   |
 | `opendataloader-pdf`    | PDF text/table extraction CLI                       |
 | `typst`                 | Typst document authoring and scripting              |
+| `vnc-browser`           | Share a headed agent-browser session over noVNC     |
 
 ## Maintenance
 
