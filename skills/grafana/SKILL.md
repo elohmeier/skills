@@ -36,6 +36,7 @@ Dashboard references:
 - [references/dashboard/dashboard-design.md](references/dashboard/dashboard-design.md): dashboard structure, layout, maturity, navigation, variables, and design checklists from Grafana best practices.
 - [references/dashboard/panel-types.md](references/dashboard/panel-types.md): what each core visualization is good for, required data shape, and common configuration details.
 - [references/dashboard/queries-and-transformations.md](references/dashboard/queries-and-transformations.md): PromQL handling, series naming, query options, variables, transformations, tables, joining, reducing, and field overrides.
+- [references/dashboard/generated-dashboard-management.md](references/dashboard/generated-dashboard-management.md): generated dashboards, Jsonnet/source-of-truth provenance, metadata annotations, managed dashboards, and plugin-owned dashboards.
 
 Reusable dashboard JSON starts in `assets/dashboard/`:
 
@@ -61,6 +62,7 @@ Dashboard JSON guardrails:
 - Use `gridPos` units on a 24-column grid. Keep related panels aligned and avoid tiny panels for dense legends or tables.
 - When changing panel type, review `options` and `fieldConfig.custom`; panel-specific custom options may not apply to the new panel.
 - For generated dashboards, keep IDs nullable or absent when importing into a new Grafana instance unless targeting an existing dashboard.
+- For Jsonnet/GitOps/generated dashboards, read `references/dashboard/generated-dashboard-management.md` before recommending custom dashboard fields or edit-lock behavior.
 
 ## Scenes App Track
 
