@@ -1,6 +1,6 @@
 ---
 name: grafana
-description: Work with Grafana dashboards and Grafana app plugins. Use when Codex needs to design, review, create, or edit dashboard JSON and panels; tune PromQL-backed dashboards, transformations, variables, thresholds, legends, tables, and links; or build Grafana app plugins with @grafana/scenes, including SceneApp routing, SceneAppPage tabs and drilldowns, EmbeddedScene composition, VizPanel/PanelBuilders, scene variables, SceneQueryRunner, SceneDataTransformer, layouts, custom SceneObjectBase classes, behaviors, URL sync, and @grafana/scenes-react.
+description: Work with Grafana dashboards and Grafana app plugins. Use when Codex needs to design, review, create, edit, or validate dashboard JSON and panels, including dashboard.grafana.app v2/v2beta1 schema validation; tune PromQL-backed dashboards, transformations, variables, thresholds, legends, tables, and links; or build Grafana app plugins with @grafana/scenes, including SceneApp routing, SceneAppPage tabs and drilldowns, EmbeddedScene composition, VizPanel/PanelBuilders, scene variables, SceneQueryRunner, SceneDataTransformer, layouts, custom SceneObjectBase classes, behaviors, URL sync, and @grafana/scenes-react.
 ---
 
 # Grafana
@@ -63,6 +63,13 @@ Dashboard JSON guardrails:
 - When changing panel type, review `options` and `fieldConfig.custom`; panel-specific custom options may not apply to the new panel.
 - For generated dashboards, keep IDs nullable or absent when importing into a new Grafana instance unless targeting an existing dashboard.
 - For Jsonnet/GitOps/generated dashboards, read `references/dashboard/generated-dashboard-management.md` before recommending custom dashboard fields or edit-lock behavior.
+
+Dashboard schema validation:
+
+- For `dashboard.grafana.app/v2` or `v2beta1` JSON, use `scripts/validate-dashboard-v2.py`. It validates against Grafana's checked-in `apps/dashboard/pkg/apis/dashboard/<version>/dashboard_spec.cue` and also checks required properties from Grafana's OpenAPI/Monaco editor schema.
+- The script accepts raw dashboard `spec` JSON or resource wrappers with `spec`; wrapper presence or absence is not itself a validation failure.
+- By default, the script fetches the required schema files from `raw.githubusercontent.com/grafana/grafana/<ref>/...` and caches them under `~/.cache/grafana-dashboard-v2-schema`. Use `--grafana-ref` to pin a branch/tag/commit and `--refresh-cache` to update cached files.
+- Set `GRAFANA_REPO` or pass `--grafana-repo` to validate against a local Grafana checkout instead of the cached raw GitHub files. Use `--offline` to forbid network fetches.
 
 ## Scenes App Track
 
