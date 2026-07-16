@@ -35,16 +35,18 @@
   },
   "panels": [
     {
+      "id": 1,
       "type": "text",
       "title": "Purpose",
       "gridPos": { "x": 0, "y": 0, "w": 24, "h": 3 },
       "options": {
         "mode": "markdown",
-        "content": "RED dashboard for selected services. Use the variables to narrow scope; drill down from high-level symptoms to route/status details."
+        "content": "RED dashboard for selected services. Use the variables to narrow scope; drill down from high-level symptoms to route/status details. A valid zero is not the same as no data."
       },
       "fieldConfig": { "defaults": {}, "overrides": [] }
     },
     {
+      "id": 2,
       "type": "stat",
       "title": "Request rate",
       "gridPos": { "x": 0, "y": 3, "w": 6, "h": 4 },
@@ -68,12 +70,14 @@
         "defaults": {
           "unit": "reqps",
           "decimals": 2,
+          "noValue": "No matching samples",
           "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] }
         },
         "overrides": []
       }
     },
     {
+      "id": 3,
       "type": "stat",
       "title": "Error ratio",
       "gridPos": { "x": 6, "y": 3, "w": 6, "h": 4 },
@@ -81,7 +85,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "sum(rate(http_requests_total{service=~\"$service\", status=~\"5..\"}[$__rate_interval])) / sum(rate(http_requests_total{service=~\"$service\"}[$__rate_interval]))",
+          "expr": "(sum(rate(http_requests_total{service=~\"$service\", status=~\"5..\"}[$__rate_interval])) or vector(0)) / clamp_min(sum(rate(http_requests_total{service=~\"$service\"}[$__rate_interval])), 1e-9)",
           "legendFormat": "5xx ratio",
           "range": true
         }
@@ -97,6 +101,7 @@
         "defaults": {
           "unit": "percentunit",
           "decimals": 2,
+          "noValue": "No matching samples",
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -110,6 +115,7 @@
       }
     },
     {
+      "id": 4,
       "type": "stat",
       "title": "p95 latency",
       "gridPos": { "x": 12, "y": 3, "w": 6, "h": 4 },
@@ -133,12 +139,14 @@
         "defaults": {
           "unit": "s",
           "decimals": 3,
+          "noValue": "No histogram samples",
           "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] }
         },
         "overrides": []
       }
     },
     {
+      "id": 5,
       "type": "timeseries",
       "title": "Request rate by service",
       "gridPos": { "x": 0, "y": 7, "w": 12, "h": 8 },
@@ -158,6 +166,7 @@
       "fieldConfig": {
         "defaults": {
           "unit": "reqps",
+          "noValue": "No matching samples",
           "custom": {
             "drawStyle": "line",
             "lineInterpolation": "linear",
@@ -170,6 +179,7 @@
       }
     },
     {
+      "id": 6,
       "type": "timeseries",
       "title": "Latency percentiles",
       "gridPos": { "x": 12, "y": 7, "w": 12, "h": 8 },
@@ -202,6 +212,7 @@
         "defaults": {
           "unit": "s",
           "decimals": 3,
+          "noValue": "No histogram samples",
           "custom": {
             "drawStyle": "line",
             "lineInterpolation": "linear",

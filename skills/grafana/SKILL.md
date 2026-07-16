@@ -1,6 +1,6 @@
 ---
 name: grafana
-description: Work with Grafana dashboards and Grafana app plugins. Use when Codex needs to design, review, create, edit, or validate dashboard JSON and panels, including dashboard.grafana.app v2/v2beta1 schema validation; tune PromQL-backed dashboards, transformations, variables, thresholds, legends, tables, and links; or build Grafana app plugins with @grafana/scenes, including SceneApp routing, SceneAppPage tabs and drilldowns, EmbeddedScene composition, VizPanel/PanelBuilders, scene variables, SceneQueryRunner, SceneDataTransformer, layouts, custom SceneObjectBase classes, behaviors, URL sync, and @grafana/scenes-react.
+description: Work with Grafana dashboards and Grafana app plugins. Use when Codex needs to design, review, create, edit, or validate dashboard JSON and panels, including dashboard.grafana.app v2/v2beta1 schema validation, native tabbed layouts, and live visible-data checks; tune PromQL-backed dashboards, transformations, variables, thresholds, legends, tables, and links; or build Grafana app plugins with @grafana/scenes, including SceneApp routing, SceneAppPage tabs and drilldowns, EmbeddedScene composition, VizPanel/PanelBuilders, scene variables, SceneQueryRunner, SceneDataTransformer, layouts, custom SceneObjectBase classes, behaviors, URL sync, and @grafana/scenes-react.
 ---
 
 # Grafana
@@ -24,35 +24,44 @@ Before loading references, classify the task:
 
 First steps:
 
-1. Identify the dashboard goal: service health, infrastructure capacity, debugging, executive/status overview, or exploratory analysis.
-2. Identify the data shape before choosing a panel: time series, single reduced value, rows and columns, logs, traces, geospatial, histogram buckets, categorical states, or node/edge graph.
-3. Prefer fixing data shape at the query when it is cheap and semantically clear. Use transformations when joining, reshaping, hiding, renaming, calculating, or adapting mixed data for one panel.
-4. Set units, decimals, thresholds, value mappings, legend, tooltips, and field overrides deliberately. These determine whether the panel is readable.
-5. Validate by inspecting final data frames, not only the visualization. In Grafana, use panel Inspect/Data and transformation debug.
+1. Write the design contract before writing queries: audience, job or decision, trigger, normal/concerning/critical states, freshness, failure-state semantics, next action, owner, and success criteria. Start from `assets/dashboard/dashboard-design-brief.md`.
+2. Choose one operational strategy and information path. Separate dashboards when audiences, decisions, or time horizons differ; do not solve that mismatch with more rows or tabs.
+3. Identify the data shape before choosing a panel: time series, single reduced value, rows and columns, logs, traces, geospatial, histogram buckets, categorical states, or node/edge graph.
+4. Prefer fixing data shape at the query when it is cheap and semantically clear. Use transformations when joining, reshaping, hiding, renaming, calculating, or adapting mixed data for one panel.
+5. Set units, decimals, thresholds, value mappings, legend, tooltips, null/no-data behavior, and field overrides deliberately. These determine whether the panel is truthful and readable.
+6. Validate with representative tasks and data states. Inspect final data frames in panel Inspect/Data and transformation debug; also test normal, incident, zero, no-data, stale, partial-data, and query-error states.
 
 Dashboard references:
 
 - [references/dashboard/rendering-model.md](references/dashboard/rendering-model.md): how Grafana panel JSON becomes rendered React panels, including query, transformation, field config, `PanelChrome`, and plugin behavior.
-- [references/dashboard/dashboard-design.md](references/dashboard/dashboard-design.md): dashboard structure, layout, maturity, navigation, variables, and design checklists from Grafana best practices.
+- [references/dashboard/dashboard-design.md](references/dashboard/dashboard-design.md): design contracts, workflow and layout choices, failure states, accessibility, performance budgets, navigation, and task-based review.
 - [references/dashboard/panel-types.md](references/dashboard/panel-types.md): what each core visualization is good for, required data shape, and common configuration details.
 - [references/dashboard/queries-and-transformations.md](references/dashboard/queries-and-transformations.md): PromQL handling, series naming, query options, variables, transformations, tables, joining, reducing, and field overrides.
+- [references/dashboard/tabbed-dashboards-json.md](references/dashboard/tabbed-dashboards-json.md): how to author native tabbed dashboards in `dashboard.grafana.app/v2` JSON, including element references, child layouts, nesting, repeats, URL state, import, and validation.
+- [references/dashboard/dashboard-visible-data.md](references/dashboard/dashboard-visible-data.md): query classic or v2 dashboards against live Grafana and inspect transformed, field-configured values with the visible-data CLI.
 - [references/dashboard/generated-dashboard-management.md](references/dashboard/generated-dashboard-management.md): generated dashboards, Jsonnet/source-of-truth provenance, metadata annotations, managed dashboards, and plugin-owned dashboards.
 
 Reusable dashboard JSON starts in `assets/dashboard/`:
 
+- `assets/dashboard/dashboard-design-brief.md`: fill-in design contract and review worksheet to complete before dashboard JSON.
 - `assets/dashboard/service-red-dashboard.json`: RED service dashboard skeleton for Prometheus.
+- `assets/dashboard/service-red-dashboard-v2.json`: full `dashboard.grafana.app/v2` RED example with rows, fixed and auto grids, variables, explicit failure semantics, and operational descriptions.
 - `assets/dashboard/infrastructure-use-dashboard.json`: USE infrastructure dashboard skeleton for Prometheus/node exporter.
 - `assets/dashboard/table-detail-panel.json`: table panel template with organize/filter-friendly defaults.
 - `assets/dashboard/panel-snippets.json`: copyable panel fragments for common stat, time series, table, and text panels.
+- `assets/dashboard/tabbed-dashboard-v2.json`: complete, schema-valid `dashboard.grafana.app/v2` resource with fixed-grid and auto-grid tabs.
 
 Dashboard workflow:
 
-1. Start with observability strategy: RED for services, USE for infrastructure, and golden signals for user-facing systems.
-2. Build a top-down information path: status and KPIs first, correlated trends next, detailed tables/logs/traces/drilldowns lower down.
-3. Choose panels by data shape. Use time series for numeric values over time, stat/gauge/bar gauge for reduced values, table for row-level detail, state timeline/status history for categorical state over time, and heatmap/histogram for distributions.
-4. Configure query output with stable `refId`s, bounded labels, Prometheus `$__rate_interval` for `rate()` and `increase()`, and query format/type matching the panel.
-5. Shape and label fields with transformations in intentional order and field overrides for units, decimals, display names, min/max, colors, thresholds, and panel-specific options.
-6. Finish with usability: variables instead of cloned dashboards, dashboard links/data links for drilldown, panel descriptions for non-obvious panels, and truthful stacking only.
+1. Complete the dashboard design contract: audience, decision, trigger, time/freshness contract, state semantics, next action, owner, and measurable task outcome.
+2. Start with one observability strategy: RED for services, USE for infrastructure, and golden signals for user-facing systems.
+3. Build the action path: notice status, interpret correlated trends, inspect detail, then reach the runbook or logs/traces/profiles without losing time and variable context.
+4. Choose the grouping primitive deliberately: separate dashboard, tabs, rows, fixed grid, auto grid, repeats, or conditional rendering. Keep operational status visible; do not hide critical evidence behind tabs or conditions.
+5. Choose panels by data shape. Use time series for numeric values over time, stat/gauge/bar gauge for reduced values, table for row-level detail, state timeline/status history for categorical state over time, and heatmap/histogram for distributions.
+6. Configure query output with stable `refId`s, bounded labels, Prometheus `$__rate_interval` for `rate()` and `increase()`, and query format/type matching the panel.
+7. Shape and label fields with transformations in intentional order and field overrides for units, decimals, display names, min/max, colors, thresholds, no-value text, and panel-specific options.
+8. Set and verify a performance budget for default time range, refresh, panel/query count, series cardinality, variable chains, repeats, transformations, and maximum data points.
+9. Validate the dashboard through representative user tasks and failure states, at narrow and wide widths and in light and dark themes.
 
 Dashboard JSON guardrails:
 
@@ -61,8 +70,9 @@ Dashboard JSON guardrails:
 - Query `targets` need stable `refId`s because transformations and expressions often reference them.
 - Use `gridPos` units on a 24-column grid. Keep related panels aligned and avoid tiny panels for dense legends or tables.
 - When changing panel type, review `options` and `fieldConfig.custom`; panel-specific custom options may not apply to the new panel.
-- For generated dashboards, keep IDs nullable or absent when importing into a new Grafana instance unless targeting an existing dashboard.
+- For generated classic dashboards, keep the top-level dashboard `id` nullable or absent when importing into a new Grafana instance unless targeting an existing dashboard. V2 panel `spec.id` fields are different: they are required numeric panel identities.
 - For Jsonnet/GitOps/generated dashboards, read `references/dashboard/generated-dashboard-management.md` before recommending custom dashboard fields or edit-lock behavior.
+- Native dashboard tabs require the v2 resource model: use `spec.elements` plus a `TabsLayout`. Classic dashboard JSON with top-level `panels`/`schemaVersion` has no native tab representation and downgrades tabs to rows.
 
 Dashboard schema validation:
 
@@ -70,6 +80,13 @@ Dashboard schema validation:
 - The script accepts raw dashboard `spec` JSON or resource wrappers with `spec`; wrapper presence or absence is not itself a validation failure.
 - By default, the script fetches the required schema files from `raw.githubusercontent.com/grafana/grafana/<ref>/...` and caches them under `~/.cache/grafana-dashboard-v2-schema`. Use `--grafana-ref` to pin a branch/tag/commit and `--refresh-cache` to update cached files.
 - Set `GRAFANA_REPO` or pass `--grafana-repo` to validate against a local Grafana checkout instead of the cached raw GitHub files. Use `--offline` to forbid network fetches.
+
+Dashboard live-data validation:
+
+- Use `scripts/dashboard_visible_data.ts` after schema validation to query a live Grafana instance and inspect the values users receive after variables, standard transformations, field overrides, units, mappings, reducers, and table sorting.
+- The script supports classic and v2 dashboard JSON. Start with `--list-panels`, then select bounded panels, time ranges, and variable scopes. Do not run every panel against production by default.
+- Install its pinned Node dependencies from `scripts/package.json`. Set `GRAFANA_URL` and, when authentication is required, `GRAFANA_TOKEN`. Keep tokens out of arguments, output, and version control.
+- This is a data-pipeline check, not a browser renderer. Pair it with task-based browser checks for layout, interaction, links, themes, narrow widths, and accessibility. Read `references/dashboard/dashboard-visible-data.md` for setup, examples, limitations, and exit codes.
 
 ## Scenes App Track
 
@@ -140,6 +157,6 @@ Scenes guardrails:
 
 ## Validation
 
-For dashboard work, confirm each panel has a clear question, matching data shape, correct units/thresholds/legends/null handling, bounded PromQL cardinality, predictable table columns, useful data links, and intentional transformation order.
+For dashboard work, confirm the dashboard has a named audience, decision, owner, freshness contract, explicit failure-state semantics, action path, and performance budget. Confirm each panel has a clear question, matching data shape, correct units/thresholds/legends/null handling, bounded PromQL cardinality, predictable table columns, useful data links, and intentional transformation order. Test the representative task and normal, incident, zero, no-data, stale, partial-data, and query-error states.
 
 For scenes apps, run the repo's lint, typecheck, and tests when available. For UI changes, start the app if practical and verify routing, panels, variables, query behavior, URL sync, and responsive layout.
