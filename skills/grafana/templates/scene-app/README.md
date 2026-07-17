@@ -45,14 +45,16 @@ The easiest way to get those is `npx @grafana/create-plugin@latest` ➜ **App (w
 
 ## Wiring notes
 
-- `App.tsx` calls `useSceneApp(getSceneApp)` — never `new SceneApp(...)` inline. Memoization is essential for URL sync.
+- `App.tsx` calls `useSceneApp(getSceneApp)` with a module-scope factory. The factory identity is the cache key, so don't replace it with an inline callback.
 - Tab parents use `routePath: '<base>/*'`. The trailing `/*` lets React Router descend into tab routes.
-- Drilldowns use `routePath: ':param/*'` relative to the parent.
+- The first tab uses `routePath: ''`; sibling tab paths are relative segments such as `locations`, never `/locations`.
+- Page-level drilldowns use a relative pattern such as `room/:roomName/*`.
 - `getParentPage: () => parent` on a drilldown wires up the breadcrumb back-link.
-- The drilldown's data link uses `${__value.text}${__url.params}` to pass the row value and preserve query state (time range, vars).
+- The drilldown's data link uses `${__value.text:percentencode}${__url.params}` to encode the row value and preserve query state.
+- Tabs appear as page navigation children. The tab container, not the active tab, supplies the breadcrumb item and page title.
 
 ## Going further
 
 - Add variables that affect every page: put them on a top-level `SceneVariableSet` and pass it to `SceneApp` (every `SceneAppPage` inherits scope).
-- Share data across tabs: `getScene()` returns a fresh scene per call, so pass a shared query runner via a closure or provide a helper that builds the scene from a shared input.
+- `SceneAppPage` caches the scene returned by `getScene()` for each matched URL. Return a new scene for the first visit and never attach one scene instance to multiple parents.
 - Add behaviors (cursor sync, auto-refresh): see `references/scenes/09-behaviors.md`.

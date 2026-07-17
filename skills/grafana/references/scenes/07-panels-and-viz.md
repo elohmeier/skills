@@ -2,6 +2,20 @@
 
 `VizPanel` is the scene wrapper around any Grafana visualization plugin (timeseries, stat, table, etc.). `PanelBuilders` is a fluent helper that produces correctly-typed `VizPanel` instances.
 
+## Contents
+
+- [PanelBuilders — the fluent API](#panelbuilders--the-fluent-api)
+- [Direct VizPanel construction](#direct-vizpanel-construction)
+- [Table panel patterns](#table-panel-patterns)
+- [Stat sparkline pattern](#stat-sparkline-pattern)
+- [Panel menu](#panel-menu)
+- [Header actions](#header-actions)
+- [Panel context — sharing state across panels](#panel-context--sharing-state-across-panels)
+- [Runtime panel plugins](#runtime-panel-plugins)
+- [Subheader — adding content below the panel header](#subheader--adding-content-below-the-panel-header)
+- [VizPanelExploreButton](#vizpanelexplorebutton)
+- [Common gotchas](#common-gotchas)
+
 ## PanelBuilders — the fluent API
 
 ```ts
@@ -119,6 +133,95 @@ new VizPanel({
 });
 ```
 
+## Table panel patterns
+
+Table panel options and field options live at different levels. Use `setOption` for panel-wide behavior and custom field config/overrides for columns:
+
+```ts
+import { PanelBuilders } from "@grafana/scenes";
+import { TableCellDisplayMode, TableCellHeight } from "@grafana/schema";
+
+const table = PanelBuilders.table()
+  .setData(tableData)
+  .setTitle("Services")
+  .setOption("showHeader", true)
+  .setOption("cellHeight", TableCellHeight.Sm)
+  .setOption("enablePagination", true)
+  .setOption("frozenColumns", { left: 1 })
+  .setOption("sortBy", [{ displayName: "Request rate", desc: true }])
+  .setCustomFieldConfig("align", "auto")
+  .setCustomFieldConfig("minWidth", 90)
+  .setCustomFieldConfig("cellOptions", { type: TableCellDisplayMode.Auto })
+  .setOverrides((builder) =>
+    builder
+      .matchFieldsWithName("Request rate")
+      .overrideUnit("reqps")
+      .overrideDecimals(2)
+      .overrideCustomFieldConfig("width", 160)
+  )
+  .build();
+```
+
+`enablePagination` and column filters change client-side display only; they do not reduce query cost. Multiple frames produce a dataset selector rather than one combined table.
+
+For one sparkline per row, preserve the range query and add `timeSeriesTable` before the panel:
+
+```ts
+import { SceneDataTransformer } from "@grafana/scenes";
+
+const tableRangeQuery = getRangeQuery();
+
+const tableData = new SceneDataTransformer({
+  $data: tableRangeQuery,
+  transformations: [
+    {
+      id: "timeSeriesTable",
+      options: { A: { stat: "lastNotNull" } },
+    },
+  ],
+});
+
+const sparklineTable = PanelBuilders.table()
+  .setData(tableData)
+  .setCustomFieldConfig("cellOptions", { type: TableCellDisplayMode.Auto })
+  .setOverrides((builder) =>
+    builder
+      .matchFieldsWithName("Trend #A")
+      .overrideDisplayName("Trend")
+      .overrideUnit("reqps")
+      .overrideCustomFieldConfig("cellOptions", {
+        type: TableCellDisplayMode.Sparkline,
+        hideValue: false,
+      })
+  )
+  .build();
+```
+
+The transformation produces label columns and a frame-valued `Trend #A` column. Apply the sparkline cell type only to that trend field. Read [tables-and-sparklines.md](../dashboard/tables-and-sparklines.md) for the full data contract, JSON equivalents, threshold color, and performance guidance.
+
+## Stat sparkline pattern
+
+Give a stat panel the original range data and let the stat reduce it internally:
+
+```ts
+import { BigValueGraphMode } from "@grafana/schema";
+
+const statRangeQuery = getRangeQuery();
+
+const stat = PanelBuilders.stat()
+  .setData(statRangeQuery)
+  .setOption("reduceOptions", {
+    values: false,
+    calcs: ["lastNotNull"],
+    fields: "",
+  })
+  .setOption("graphMode", BigValueGraphMode.Area)
+  .setUnit("reqps")
+  .build();
+```
+
+Do not insert a `reduce` transformation before this panel: it leaves only one point, so the stat value can render while the sparkline cannot. Stat sparklines also hide responsively when the tile is too small. `tableRangeQuery` and `statRangeQuery` must be distinct scene objects unless both panels inherit one provider from a common ancestor.
+
 ## Panel menu
 
 ```ts
@@ -219,3 +322,5 @@ PanelBuilders.timeseries()
 - **Field config not applying** — `defaults` apply to all fields; `overrides` apply only to matched fields. Verify your matcher.
 - **Variables not interpolating in title/option strings** — they should auto-interpolate. If they don't, check the variable is in scope (ancestor `SceneVariableSet`).
 - **Stat/gauge shows "No data"** — common when the query returns multiple series with no reduction. Use a `SceneDataTransformer` with `reduce` transformation, or set `options.reduceOptions.calcs = ['lastNotNull']`.
+- **Table sparkline says "no data"** — a scalar or label field got the sparkline cell type. Run `timeSeriesTable` and override only its frame-valued `Trend #<refId>` field.
+- **Stat shows a value but no sparkline** — confirm the panel receives a range field with at least two points, `reduceOptions.values` is false, `graphMode` is `area`, and the panel has enough height.

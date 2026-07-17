@@ -16,12 +16,16 @@ export const withDrilldownPage = new SceneAppPage({
     {
       routePath: "room/:roomName/*",
       getPage(routeMatch, parent) {
+        // SceneRouteMatch params come from React Router's useParams and are already decoded.
         const roomName = routeMatch.params.roomName!;
+        const encodedRoomName = encodeURIComponent(roomName);
+
         return new SceneAppPage({
-          url: `${prefixRoute(ROUTES.WithDrilldown)}/room/${roomName}`,
+          url: `${prefixRoute(ROUTES.WithDrilldown)}/room/${encodedRoomName}`,
           routePath: "room/:roomName/*",
-          title: `${decodeURIComponent(roomName)} details`,
+          title: `${roomName} details`,
           subTitle: "Drill-down view for a single room.",
+          // Dynamic pages are not static scene children; wire their breadcrumb parent explicitly.
           getParentPage: () => parent,
           getScene: () => roomDetailScene(roomName),
         });

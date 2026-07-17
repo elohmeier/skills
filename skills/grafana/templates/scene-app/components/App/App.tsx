@@ -21,7 +21,7 @@ function getSceneApp() {
 }
 
 function AppWithScenes() {
-  // useSceneApp memoizes the SceneApp — DO NOT remove or call new SceneApp() in render.
+  // The module-scope factory gives useSceneApp a stable cache key. Do not replace it with an inline callback.
   const scene = useSceneApp(getSceneApp);
 
   return (

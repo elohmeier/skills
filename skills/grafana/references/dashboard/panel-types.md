@@ -2,6 +2,12 @@
 
 Use this to choose panels and diagnose data-shape mismatches.
 
+## Contents
+
+- [Source anchors](#source-anchors)
+- [Common panel choices](#common-panel-choices)
+- [Cross-cutting options](#cross-cutting-options)
+
 ## Source Anchors
 
 Panel docs live under `docs/sources/visualizations/panels-visualizations/visualizations/`.
@@ -42,7 +48,9 @@ Stat:
 - Use for one or a small set of reduced values.
 - Works with single values or time series reduced by calculation.
 - Good for SLO burn, current error ratio, availability, current saturation, latest build age.
-- Configure reduce options, text mode, color mode, sparkline, thresholds, no-value text.
+- Configure reduce options, text mode, color mode, sparkline, thresholds, and no-value text.
+- A stat sparkline needs unreduced range data with at least two points, `reduceOptions.values: false`, and `graphMode: "area"`. It is hidden when the tile is too small.
+- The displayed number is reduced while the graph uses the original field history. Do not reduce the frame upstream when a sparkline is required.
 
 Gauge:
 
@@ -63,6 +71,9 @@ Table:
 - Supports multiple datasets with a selector.
 - Configure column width, alignment, filtering, pagination, footer calculations, data links/actions, and cell types.
 - Use transformations or overrides to hide noisy columns, rename fields, order fields, and render gauges/sparklines/JSON/images.
+- Multiple frames produce a dataset selector, not adjacent columns. Merge or join only when there is a stable key and one coherent table is the intended result.
+- A sparkline cell needs an array or nested data frame, not a scalar. Use `timeSeriesTable`, then target only `Trend #<refId>` with the sparkline override.
+- Read [tables-and-sparklines.md](tables-and-sparklines.md) for exact JSON, Scenes builders, table option ownership, and sparkline behavior.
 
 State timeline:
 

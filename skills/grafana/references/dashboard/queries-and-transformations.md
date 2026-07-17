@@ -2,6 +2,18 @@
 
 Use this for query shaping, Prometheus details, series naming, transformations, and tabular data.
 
+## Contents
+
+- [Source anchors](#source-anchors)
+- [PromQL panel rules](#promql-panel-rules)
+- [Prometheus query editor options](#prometheus-query-editor-options)
+- [Series labeling](#series-labeling)
+- [Transformation rules](#transformation-rules)
+- [Common transformations](#common-transformations)
+- [Table handling](#table-handling)
+- [Field overrides and display](#field-overrides-and-display)
+- [Troubleshooting](#troubleshooting)
+
 ## Source Anchors
 
 - Query overview: `docs/sources/visualizations/panels-visualizations/query-transform-data/_index.md`
@@ -87,7 +99,7 @@ Use this for query shaping, Prometheus details, series naming, transformations, 
 - Reduce: reduce fields or series to calculations for stat/gauge/table summaries.
 - Rename by regex: clean display names.
 - Series to rows: convert multiple series to rows, often for table summaries.
-- Time series to table: create tabular summaries from time series.
+- Time series to table: create one row per numeric series, label columns, and a frame-valued `Trend #<refId>` field for table sparklines. It returns one table frame per refId.
 
 ## Table Handling
 
@@ -102,6 +114,9 @@ Use this for query shaping, Prometheus details, series naming, transformations, 
 - Use table footer calculations for numeric summaries.
 - Use column filtering for temporary user-side filtering; use query filters for persistent and cheaper filtering.
 - Add data links/actions to IDs, services, trace IDs, dashboard drilldowns, or runbooks.
+- For a table sparkline, keep a range query, run `timeSeriesTable`, and override only its `Trend #<refId>` field. Defaults should keep ordinary label columns at cell type `auto`.
+- For a stat sparkline, keep the original range field and let stat `reduceOptions` calculate the displayed value; an upstream `reduce` transform removes the history.
+- Read [tables-and-sparklines.md](tables-and-sparklines.md) before authoring sparkline JSON or Scenes table builders.
 
 ## Field Overrides And Display
 

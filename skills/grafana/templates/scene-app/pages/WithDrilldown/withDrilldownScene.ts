@@ -32,7 +32,8 @@ export function withDrilldownScene() {
                 .overrideLinks([
                   {
                     title: "Open ${__value.text}",
-                    url: `${PLUGIN_BASE_URL}/${ROUTES.WithDrilldown}/room/\${__value.text}\${__url.params}`,
+                    url:
+                      `${PLUGIN_BASE_URL}/${ROUTES.WithDrilldown}/room/\${__value.text:percentencode}\${__url.params}`,
                   },
                 ])
             )

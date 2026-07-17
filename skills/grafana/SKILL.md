@@ -1,6 +1,6 @@
 ---
 name: grafana
-description: Work with Grafana dashboards and Grafana app plugins. Use when Codex needs to design, review, create, edit, or validate dashboard JSON and panels, including dashboard.grafana.app v2/v2beta1 schema validation, native tabbed layouts, and live visible-data checks; tune PromQL-backed dashboards, transformations, variables, thresholds, legends, tables, and links; or build Grafana app plugins with @grafana/scenes, including SceneApp routing, SceneAppPage tabs and drilldowns, EmbeddedScene composition, VizPanel/PanelBuilders, scene variables, SceneQueryRunner, SceneDataTransformer, layouts, custom SceneObjectBase classes, behaviors, URL sync, and @grafana/scenes-react.
+description: Work with Grafana dashboards and Grafana app plugins. Use when Codex needs to design, review, create, edit, or validate dashboard JSON and panels, including dashboard.grafana.app v2/v2beta1 schema validation, native tabbed layouts, table/stat sparklines, and live visible-data checks; tune PromQL-backed dashboards, transformations, variables, thresholds, legends, tables, and links; or build Grafana app plugins with @grafana/scenes, including SceneApp routing, breadcrumbs, SceneAppPage tabs and drilldowns, EmbeddedScene composition, VizPanel/PanelBuilders, scene variables, SceneQueryRunner, SceneDataTransformer, layouts, custom SceneObjectBase classes, behaviors, URL sync, and @grafana/scenes-react.
 ---
 
 # Grafana
@@ -37,6 +37,7 @@ Dashboard references:
 - [references/dashboard/dashboard-design.md](references/dashboard/dashboard-design.md): design contracts, workflow and layout choices, failure states, accessibility, performance budgets, navigation, and task-based review.
 - [references/dashboard/panel-types.md](references/dashboard/panel-types.md): what each core visualization is good for, required data shape, and common configuration details.
 - [references/dashboard/queries-and-transformations.md](references/dashboard/queries-and-transformations.md): PromQL handling, series naming, query options, variables, transformations, tables, joining, reducing, and field overrides.
+- [references/dashboard/tables-and-sparklines.md](references/dashboard/tables-and-sparklines.md): exact table option ownership, table-sparkline nested-frame contract, `timeSeriesTable`, stat sparkline behavior, JSON, Scenes builders, and troubleshooting.
 - [references/dashboard/tabbed-dashboards-json.md](references/dashboard/tabbed-dashboards-json.md): how to author native tabbed dashboards in `dashboard.grafana.app/v2` JSON, including element references, child layouts, nesting, repeats, URL state, import, and validation.
 - [references/dashboard/dashboard-visible-data.md](references/dashboard/dashboard-visible-data.md): query classic or v2 dashboards against live Grafana and inspect transformed, field-configured values with the visible-data CLI.
 - [references/dashboard/generated-dashboard-management.md](references/dashboard/generated-dashboard-management.md): generated dashboards, Jsonnet/source-of-truth provenance, metadata annotations, managed dashboards, and plugin-owned dashboards.
@@ -49,6 +50,7 @@ Reusable dashboard JSON starts in `assets/dashboard/`:
 - `assets/dashboard/infrastructure-use-dashboard.json`: USE infrastructure dashboard skeleton for Prometheus/node exporter.
 - `assets/dashboard/table-detail-panel.json`: table panel template with organize/filter-friendly defaults.
 - `assets/dashboard/panel-snippets.json`: copyable panel fragments for common stat, time series, table, and text panels.
+- `assets/dashboard/table-sparklines-v2.json`: schema-v2 dashboard with a correctly transformed table sparkline and an unreduced stat sparkline.
 - `assets/dashboard/tabbed-dashboard-v2.json`: complete, schema-valid `dashboard.grafana.app/v2` resource with fixed-grid and auto-grid tabs.
 
 Dashboard workflow:
@@ -57,7 +59,7 @@ Dashboard workflow:
 2. Start with one observability strategy: RED for services, USE for infrastructure, and golden signals for user-facing systems.
 3. Build the action path: notice status, interpret correlated trends, inspect detail, then reach the runbook or logs/traces/profiles without losing time and variable context.
 4. Choose the grouping primitive deliberately: separate dashboard, tabs, rows, fixed grid, auto grid, repeats, or conditional rendering. Keep operational status visible; do not hide critical evidence behind tabs or conditions.
-5. Choose panels by data shape. Use time series for numeric values over time, stat/gauge/bar gauge for reduced values, table for row-level detail, state timeline/status history for categorical state over time, and heatmap/histogram for distributions.
+5. Choose panels by data shape. Use time series for numeric values over time, stat/gauge/bar gauge for reduced values, table for row-level detail, state timeline/status history for categorical state over time, and heatmap/histogram for distributions. Read `references/dashboard/tables-and-sparklines.md` before putting trends inside stats or table cells.
 6. Configure query output with stable `refId`s, bounded labels, Prometheus `$__rate_interval` for `rate()` and `increase()`, and query format/type matching the panel.
 7. Shape and label fields with transformations in intentional order and field overrides for units, decimals, display names, min/max, colors, thresholds, no-value text, and panel-specific options.
 8. Set and verify a performance budget for default time range, refresh, panel/query count, series cardinality, variable chains, repeats, transformations, and maximum data points.
@@ -73,6 +75,8 @@ Dashboard JSON guardrails:
 - For generated classic dashboards, keep the top-level dashboard `id` nullable or absent when importing into a new Grafana instance unless targeting an existing dashboard. V2 panel `spec.id` fields are different: they are required numeric panel identities.
 - For Jsonnet/GitOps/generated dashboards, read `references/dashboard/generated-dashboard-management.md` before recommending custom dashboard fields or edit-lock behavior.
 - Native dashboard tabs require the v2 resource model: use `spec.elements` plus a `TabsLayout`. Classic dashboard JSON with top-level `panels`/`schemaVersion` has no native tab representation and downgrades tabs to rows.
+- A table sparkline cell needs a frame-valued field. Keep a range query, run `timeSeriesTable`, and apply `custom.cellOptions.type: "sparkline"` only to `Trend #<refId>` or its renamed final field.
+- A stat sparkline needs the original range data. Use `graphMode: "area"` with `reduceOptions.values: false`; do not collapse the field with an upstream reduce transformation.
 
 Dashboard schema validation:
 
@@ -149,11 +153,13 @@ Template index:
 Scenes guardrails:
 
 - Never share scene object instances across multiple parents. To use the same logical object in two places, `clone()` it or wrap it with `SceneObjectRef`.
-- Always memoize the `SceneApp` instance with `useSceneApp(getSceneApp)`. Recreating it on every render breaks URL sync and loses state.
+- Keep one stable `SceneApp` instance. Prefer `useSceneApp(getSceneApp)` with a module-scope factory; its cache key is the factory identity, so never pass an inline factory.
 - Match versions. `@grafana/data`, `@grafana/runtime`, `@grafana/ui`, and `@grafana/scenes` must be compatible with `grafanaDependency` in `plugin.json`.
 - Provision a datasource for dev apps that query data. The create-plugin template uses `gdev-testdata`; add `provisioning/datasources/default.yaml` when needed.
 - `module.tsx` uses top-level `await` for `initPluginTranslations(...)` before `App` lazy-loads. Do not move the import below the lazy-loaded component.
-- Pages with tabs need `routePath: '<base>/*'` so React Router descends into tab routes. Drilldowns need their own `routePath: ':param/*'`.
+- Pages with tabs or drilldowns need `routePath: '<base>/*'`. Child paths are relative: use `''` for the first tab and `logs`, never `'/'` or `'/logs'`, for sibling tabs.
+- Dynamic drilldown pages must return `getParentPage: () => parent` for breadcrumbs. Tab drilldowns are registered at the container route level, so their relative pattern includes the tab segment, for example `handlers/:handler/*`.
+- The tab container supplies the breadcrumb/page header item; active tabs are navigation children. Do not set `hideFromBreadcrumbs: true` just because a page has tabs.
 
 ## Validation
 

@@ -10,7 +10,7 @@ export function roomDetailScene(roomName: string) {
           refId: "A",
           datasource: DATASOURCE_REF,
           scenarioId: "random_walk",
-          alias: decodeURIComponent(roomName),
+          alias: roomName,
           min: 10,
           max: 30,
         },
@@ -24,7 +24,7 @@ export function roomDetailScene(roomName: string) {
           width: "50%",
           minHeight: 320,
           body: PanelBuilders.timeseries()
-            .setTitle(`${decodeURIComponent(roomName)} — temperature`)
+            .setTitle(`${roomName} — temperature`)
             .build(),
         }),
         new SceneFlexItem({
