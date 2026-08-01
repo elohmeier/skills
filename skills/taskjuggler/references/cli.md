@@ -72,10 +72,10 @@ Do not stop at `--check-syntax`; resource contention, dependency loops, missing 
 
 ```bash
 # Exact ID; repeat --report for several IDs.
-tj3 --report overview project.tjp
+tj3 --output-dir build/reports --report overview project.tjp
 
 # IDs matching a regular expression; repeat --reports as needed.
-tj3 --reports '^public\.' project.tjp
+tj3 --output-dir build/reports --reports '^public\.' project.tjp
 
 # Inspect a subset of declared reports without generating them.
 tj3 --no-reports --list-reports '^public\.' project.tjp
@@ -84,7 +84,7 @@ tj3 --no-reports --list-reports '^public\.' project.tjp
 tj3 --output-dir build/reports project.tjp
 ```
 
-The output directory passed to `-o`/`--output-dir` must already exist. In the installed TaskJuggler 3.8.4, this option is applied only when generating the complete report set. The `--report` and `--reports` branches do not pass it through, so selected reports and their HTML support assets use the process working directory. Run selected reports from an isolated output directory with an absolute path to the `.tjp`, and inspect `git status` before and after report generation.
+The output directory passed to `-o`/`--output-dir` must already exist. It applies to the complete report set as well as reports selected with `--report` or `--reports`; generated reports and their HTML support assets are written below that directory. Inspect `git status` before and after report generation when working in a repository.
 
 Other notable options:
 

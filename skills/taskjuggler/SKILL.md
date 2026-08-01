@@ -42,16 +42,13 @@ Treat TaskJuggler as a project compiler: describe the work breakdown, resources,
 
    The first command only parses. The second also schedules and catches constraint/resource errors. The third exposes actual report IDs, including unwanted auto-generated IDs.
 
-7. Generate all reports into an existing output directory, or run a selected report from the directory where its artifacts should land:
+7. Generate all or selected reports into an existing output directory:
 
    ```bash
    tj3 --silent --output-dir build/reports plan.tjp
-
-   cd build/reports
-   tj3 --silent --report overview /absolute/path/to/plan.tjp
+   tj3 --silent --output-dir build/reports --report overview plan.tjp
+   tj3 --silent --output-dir build/reports --reports '^public\.' plan.tjp
    ```
-
-   In TaskJuggler 3.8.4, `--output-dir` is ignored by `--report` and `--reports`; selected reports use the process working directory.
 
 8. Inspect the generated artifact or CSV structure, not only the process exit code. Report warnings separately from errors.
 
