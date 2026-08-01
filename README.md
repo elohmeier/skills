@@ -25,6 +25,7 @@ npx skills add elohmeier/skills -s typst -a claude-code -g
 | `layerchart`            | LayerChart visualizations for Svelte                |
 | `msgvault`              | Search emails in msgvault archive                   |
 | `opendataloader-pdf`    | PDF text/table extraction CLI                       |
+| `taskjuggler`           | Text-based project scheduling and reporting         |
 | `typst`                 | Typst document authoring and scripting              |
 | `vnc-browser`           | Share a headed agent-browser session over noVNC     |
 

@@ -94,13 +94,13 @@ Run in background (`run_in_background: true` in Bash) for tight feedback on long
 
 ## When to render vs. query vs. read source
 
-| Symptom | Tool |
-|---|---|
-| Overflow, clipping, misalignment, wrong page break | render PNG |
-| Wrong section/figure numbering, missing TOC entry | `query` headings/figures |
-| "Where did this end up?" (page, position) | `metadata` + `location()` + `query` |
-| Unexpected `1fr` / `auto` size | `measure()` in `#context` |
-| Compile error, missing import | read source, no render needed |
+| Symptom                                            | Tool                                |
+| -------------------------------------------------- | ----------------------------------- |
+| Overflow, clipping, misalignment, wrong page break | render PNG                          |
+| Wrong section/figure numbering, missing TOC entry  | `query` headings/figures            |
+| "Where did this end up?" (page, position)          | `metadata` + `location()` + `query` |
+| Unexpected `1fr` / `auto` size                     | `measure()` in `#context`           |
+| Compile error, missing import                      | read source, no render needed       |
 
 ## Tips
 

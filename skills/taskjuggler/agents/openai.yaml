@@ -1,0 +1,4 @@
+interface:
+  display_name: "TaskJuggler"
+  short_description: "Plan, schedule, and report with TaskJuggler"
+  default_prompt: "Use $taskjuggler to create or debug a TaskJuggler project plan and validate it with the installed CLI."
