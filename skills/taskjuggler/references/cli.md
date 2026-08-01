@@ -2,12 +2,42 @@
 
 ## Contents
 
+- [Install and verify the personal fork](#install-and-verify-the-personal-fork)
 - [`tj3`: parse, schedule, report](#tj3-parse-schedule-report)
 - [`tj3man`: installed syntax reference](#tj3man-installed-syntax-reference)
 - [Daemon, client, and web server](#daemon-client-and-web-server)
 - [Time/status sheet tools](#timestatus-sheet-tools)
 - [Configuration and safety](#configuration-and-safety)
 - [Diagnostics and exit behavior](#diagnostics-and-exit-behavior)
+
+## Install and Verify the Personal Fork
+
+Prefer the maintained `elohmeier/tap/taskjuggler` formula when the task calls
+for the personal Ruby-compatible build. The formula pins an immutable revision
+of [elohmeier/TaskJuggler](https://github.com/elohmeier/TaskJuggler) and uses a
+platform bottle when one is available.
+
+```bash
+brew tap elohmeier/tap
+brew install elohmeier/tap/taskjuggler
+
+# For an existing installation.
+brew update
+brew upgrade elohmeier/tap/taskjuggler
+```
+
+Do not install or upgrade packages during a read-only diagnosis. When
+provenance matters, inspect the active formula instead of relying on a copied
+version or commit:
+
+```bash
+brew info elohmeier/tap/taskjuggler
+brew cat elohmeier/tap/taskjuggler
+tj3 --version
+```
+
+Do not silently substitute the RubyGems.org artifact for the personal build;
+confirm that it contains the required compatibility fixes first.
 
 ## `tj3`: Parse, Schedule, Report
 

@@ -1,6 +1,6 @@
 ---
 name: taskjuggler
-description: Use when creating, editing, explaining, debugging, validating, or running TaskJuggler projects, especially .tjp/.tji files, task/resource/dependency schedules, effort/length/duration semantics, scenarios, reports, or tj3/tj3man/tj3d/tj3client CLI workflows.
+description: Use when installing, creating, editing, explaining, debugging, validating, or running TaskJuggler projects, especially the elohmeier Homebrew build, .tjp/.tji files, task/resource/dependency schedules, effort/length/duration semantics, scenarios, reports, or tj3/tj3man/tj3d/tj3client CLI workflows.
 ---
 
 # TaskJuggler
@@ -9,7 +9,7 @@ Treat TaskJuggler as a project compiler: describe the work breakdown, resources,
 
 ## First Checks
 
-1. Run `tj3 --version` and use the installed version's behavior.
+1. Run `tj3 --version` and use the installed version's behavior. For the maintained personal build, verify `brew info elohmeier/tap/taskjuggler`; install or upgrade it only when the user authorizes package changes.
 2. Locate existing project sources with `rg --files -g '*.tjp' -g '*.tji'`. Read the main `.tjp`, its includes, and relevant report definitions before editing.
 3. Ask `tj3man <keyword>` for exact syntax. When a keyword has multiple meanings, use the context-qualified entry shown by `tj3man`, such as `include.project`, `include.properties`, or `shift.task`.
 4. Load only the reference needed for the task:
