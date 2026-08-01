@@ -6,6 +6,7 @@
 - [`tj3`: parse, schedule, report](#tj3-parse-schedule-report)
 - [`tj3man`: installed syntax reference](#tj3man-installed-syntax-reference)
 - [Daemon, client, and web server](#daemon-client-and-web-server)
+- [Private HTTPS with Tailscale Serve](#private-https-with-tailscale-serve)
 - [Time/status sheet tools](#timestatus-sheet-tools)
 - [Configuration and safety](#configuration-and-safety)
 - [Diagnostics and exit behavior](#diagnostics-and-exit-behavior)
@@ -171,6 +172,40 @@ check-ss <project-id> <status-sheet>
 - Additional `.tji` files after `=` supplement only that report-server request.
 - Use `--port 0 --urifile <file>` consistently across daemon/client/webd to use an ephemeral daemon port.
 - `tj3webd` exposes reports to hosts that can reach its HTTP listener. Do not use it for confidential reports on an untrusted network.
+
+## Private HTTPS with Tailscale Serve
+
+Use the bundled script to validate a project, generate all declared reports,
+verify that HTML was produced, and optionally expose the output directory over
+private tailnet HTTPS:
+
+```bash
+# Build and inspect without changing Tailscale configuration.
+scripts/serve-tailnet.sh --build-only plan.tjp
+
+# Build, inspect existing Serve state, and print the publish command.
+scripts/serve-tailnet.sh --dry-run plan.tjp
+
+# Build and configure a persistent HTTPS file server on the node.
+scripts/serve-tailnet.sh plan.tjp
+
+# Use sudo only for the Tailscale command when the current user is not an operator.
+scripts/serve-tailnet.sh --sudo plan.tjp
+
+# Mount alongside another root handler.
+scripts/serve-tailnet.sh --set-path /schedule plan.tjp
+```
+
+The output directory defaults to `build/reports` beside the project. Override
+it with `--output-dir`. The HTTPS port defaults to 443 and can be changed with
+`--https-port`.
+
+The background Serve configuration persists across Tailscale and machine
+restarts. The script prints the matching disable command after publishing.
+The script refuses to modify a node with existing Serve mappings unless
+`--allow-existing` is passed after inspecting them.
+Use Serve for tailnet-only access; never replace it with Funnel unless the user
+explicitly requests public internet exposure.
 
 ## Time/Status Sheet Tools
 

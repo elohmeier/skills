@@ -30,7 +30,7 @@ task delivery "Delivery" {
   }
 }
 
-taskreport overview "overview" {
+taskreport overview "index" {
   formats html
   columns bsi, name, start, end, effort, resources, chart
   hideresource @all

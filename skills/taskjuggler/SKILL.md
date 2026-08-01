@@ -1,6 +1,6 @@
 ---
 name: taskjuggler
-description: Use when installing, creating, editing, explaining, debugging, validating, or running TaskJuggler projects, especially the elohmeier Homebrew build, .tjp/.tji files, task/resource/dependency schedules, effort/length/duration semantics, scenarios, reports, or tj3/tj3man/tj3d/tj3client CLI workflows.
+description: Use when installing, creating, editing, explaining, debugging, validating, or running TaskJuggler projects, especially the elohmeier Homebrew build, .tjp/.tji files, task/resource/dependency schedules, effort/length/duration semantics, scenarios, reports, tj3/tj3man/tj3d/tj3client CLI workflows, or privately serving generated HTML reports with Tailscale Serve.
 ---
 
 # TaskJuggler
@@ -15,7 +15,7 @@ Treat TaskJuggler as a project compiler: describe the work breakdown, resources,
 4. Load only the reference needed for the task:
 
    - Read [references/language.md](references/language.md) for file structure, scheduling semantics, inheritance, identifiers, time, resources, scenarios, reports, and tracking.
-   - Read [references/cli.md](references/cli.md) for `tj3`, `tj3man`, daemon/client/web commands, configuration, and sheet automation.
+   - Read [references/cli.md](references/cli.md) for `tj3`, `tj3man`, daemon/client/web commands, Tailscale Serve, configuration, and sheet automation.
    - Read [references/recipes.md](references/recipes.md) for reusable source patterns and debugging recipes.
    - Copy [assets/minimal-project.tjp](assets/minimal-project.tjp) when the user wants a new project skeleton.
 
@@ -51,6 +51,7 @@ Treat TaskJuggler as a project compiler: describe the work breakdown, resources,
    ```
 
 8. Inspect the generated artifact or CSV structure, not only the process exit code. Report warnings separately from errors.
+9. For private HTTPS publishing to a tailnet, use [scripts/serve-tailnet.sh](scripts/serve-tailnet.sh). Run it with `--build-only` when the user has not authorized changing the node's persistent Serve configuration. Never substitute Tailscale Funnel, which would make the report public.
 
 ## Core Guardrails
 
