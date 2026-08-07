@@ -4,7 +4,7 @@ Use `scripts/dashboard_visible_data.ts` to query a live Grafana instance and ins
 
 This complements schema validation:
 
-- `validate-dashboard-v2.py` proves that v2 JSON conforms to Grafana's CUE and editor schemas.
+- `scripts/dashboard-v2 validate` proves that stable-v2 JSON conforms to Grafana's pinned generated types and CUE schema and that layout references match elements.
 - `dashboard_visible_data.ts` checks live query execution and the resulting visible values for classic and v2 dashboards.
 
 ## Install the script dependencies

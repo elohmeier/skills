@@ -1,6 +1,6 @@
 ---
 name: grafana
-description: Work with Grafana dashboards and Grafana app plugins. Use when Codex needs to design, review, create, edit, or validate dashboard JSON and panels, including dashboard.grafana.app v2/v2beta1 schema validation, native tabbed layouts, table/stat sparklines, and live visible-data checks; tune PromQL-backed dashboards, transformations, variables, thresholds, legends, tables, and links; or build Grafana app plugins with @grafana/scenes, including SceneApp routing, breadcrumbs, SceneAppPage tabs and drilldowns, EmbeddedScene composition, VizPanel/PanelBuilders, scene variables, SceneQueryRunner, SceneDataTransformer, layouts, custom SceneObjectBase classes, behaviors, URL sync, and @grafana/scenes-react.
+description: Work with Grafana dashboards and Grafana app plugins. Use when Codex needs to design, review, create, edit, convert, or validate dashboard JSON and panels, including stable dashboard.grafana.app/v2 conversion and validation, native tabbed layouts, table/stat sparklines, and live visible-data checks; tune PromQL-backed dashboards, transformations, variables, thresholds, legends, tables, and links; or build Grafana app plugins with @grafana/scenes, including SceneApp routing, breadcrumbs, SceneAppPage tabs and drilldowns, EmbeddedScene composition, VizPanel/PanelBuilders, scene variables, SceneQueryRunner, SceneDataTransformer, layouts, custom SceneObjectBase classes, behaviors, URL sync, and @grafana/scenes-react.
 ---
 
 # Grafana
@@ -41,6 +41,7 @@ Dashboard references:
 - [references/dashboard/tabbed-dashboards-json.md](references/dashboard/tabbed-dashboards-json.md): how to author native tabbed dashboards in `dashboard.grafana.app/v2` JSON, including element references, child layouts, nesting, repeats, URL state, import, and validation.
 - [references/dashboard/dashboard-visible-data.md](references/dashboard/dashboard-visible-data.md): query classic or v2 dashboards against live Grafana and inspect transformed, field-configured values with the visible-data CLI.
 - [references/dashboard/generated-dashboard-management.md](references/dashboard/generated-dashboard-management.md): generated dashboards, Jsonnet/source-of-truth provenance, metadata annotations, managed dashboards, and plugin-owned dashboards.
+- [references/dashboard/dashboard-v2-tooling.md](references/dashboard/dashboard-v2-tooling.md): correctness-first classic/v1-to-stable-v2 conversion, explicit server context, loss auditing, conversion-first Jsonnet, local Grafana validation, and strict live dry runs.
 
 Reusable dashboard JSON starts in `assets/dashboard/`:
 
@@ -52,6 +53,9 @@ Reusable dashboard JSON starts in `assets/dashboard/`:
 - `assets/dashboard/panel-snippets.json`: copyable panel fragments for common stat, time series, table, and text panels.
 - `assets/dashboard/table-sparklines-v2.json`: schema-v2 dashboard with a correctly transformed table sparkline and an unreduced stat sparkline.
 - `assets/dashboard/tabbed-dashboard-v2.json`: complete, schema-valid `dashboard.grafana.app/v2` resource with fixed-grid and auto-grid tabs.
+- `assets/dashboard/v2.libsonnet`: thin stable-v2 constructors for direct authoring; never a classic converter.
+- `assets/dashboard/prometheus.libsonnet`: stable-v2 Prometheus queries, variables, and transformations; configure a datasource UID explicitly or with `withDefaultDatasource`.
+- `assets/dashboard/conversion-context.example.json`: generic datasource/library snapshot shape required by the converter.
 
 Dashboard workflow:
 
@@ -80,10 +84,11 @@ Dashboard JSON guardrails:
 
 Dashboard schema validation:
 
-- For `dashboard.grafana.app/v2` or `v2beta1` JSON, use `scripts/validate-dashboard-v2.py`. It validates against Grafana's checked-in `apps/dashboard/pkg/apis/dashboard/<version>/dashboard_spec.cue` and also checks required properties from Grafana's OpenAPI/Monaco editor schema.
-- The script accepts raw dashboard `spec` JSON or resource wrappers with `spec`; wrapper presence or absence is not itself a validation failure.
-- By default, the script fetches the required schema files from `raw.githubusercontent.com/grafana/grafana/<ref>/...` and caches them under `~/.cache/grafana-dashboard-v2-schema`. Use `--grafana-ref` to pin a branch/tag/commit and `--refresh-cache` to update cached files.
-- Set `GRAFANA_REPO` or pass `--grafana-repo` to validate against a local Grafana checkout instead of the cached raw GitHub files. Use `--offline` to forbid network fetches.
+- Read `references/dashboard/dashboard-v2-tooling.md` before converting or generating v2 JSON.
+- Use `scripts/dashboard-v2 convert` for classic or v1 inputs. It runs Grafana's pinned migration and direct stable-v2 converter, requires a complete datasource/library context, validates with Grafana's CUE validator, and fails its own preservation audit. Do not convert dashboards with Jsonnet.
+- Use `scripts/dashboard-v2 validate` for deterministic local checks against the pinned stable-v2 Go types and Grafana validator. Pass `--input-format resource` or `--input-format spec` explicitly.
+- Use `scripts/dashboard-v2 validate-live` for the authoritative `dryRun=All&fieldValidation=Strict` check against the target Grafana namespace.
+- Stable v2 is the target. Do not produce `v2alpha1` or `v2beta1` for new work and do not preserve obsolete helper interfaces.
 
 Dashboard live-data validation:
 

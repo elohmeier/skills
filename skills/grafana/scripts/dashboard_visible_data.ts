@@ -345,9 +345,6 @@ async function queryDashboardVisibleData(
   const variables = collectVariables(shape, dashboard);
   Object.assign(variables, parseVarOverrides(options.vars || []));
   const queryVariables = { ...variables };
-  if (!queryVariables.retention && panelsReferenceVariable(queryable, "retention")) {
-    queryVariables.retention = new TemplateValue(["autogen"], "autogen");
-  }
   const stepMs = options.step ? parseStepMs(options.step) : undefined;
 
   const config = grafanaConfig();
@@ -563,17 +560,6 @@ function parseVarOverrides(items: string[]): Record<string, TemplateValue> {
     result[name] = new TemplateValue([value], value);
   }
   return result;
-}
-
-function panelsReferenceVariable(panels: Panel[], name: string): boolean {
-  const direct = `$${name}`;
-  const braced = `\${${name}}`;
-  return panels.some((panel) =>
-    panel.targets.some((target) => {
-      const raw = JSON.stringify(target);
-      return raw.includes(direct) || raw.includes(braced);
-    })
-  );
 }
 
 function replaceVariables(value: string, variables: Record<string, TemplateValue>, scopedVars?: unknown): string {

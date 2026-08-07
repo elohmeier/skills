@@ -204,11 +204,20 @@ Use `kind: "Dashboard"` for create/update payloads. `DashboardWithAccessInfo` is
 Validate a complete resource or raw `spec` with the skill script:
 
 ```bash
-python3 scripts/validate-dashboard-v2.py \
-  assets/dashboard/tabbed-dashboard-v2.json \
-  --grafana-repo /path/to/grafana \
-  --offline
+scripts/dashboard-v2 validate \
+  --input assets/dashboard/tabbed-dashboard-v2.json \
+  --input-format resource
 ```
+
+For the authoritative target-server check, follow with:
+
+```bash
+scripts/dashboard-v2 validate-live \
+  --input assets/dashboard/tabbed-dashboard-v2.json \
+  --namespace default
+```
+
+It uses strict field validation and a dry run.
 
 Also inspect references mechanically when generating JSON:
 
@@ -217,4 +226,4 @@ jq -r '.spec.layout | .. | objects | select(.kind? == "ElementReference") | .nam
 jq -r '.spec.elements | keys[]' dashboard.json
 ```
 
-The first list should be a subset of the second. Schema validation catches structure and required fields; it does not replace loading the dashboard in the target Grafana and checking tab order, selection links, queries, variables, and responsive layout.
+The two lists should contain the same names exactly once. The central validator checks that invariant as well as schema structure and required fields; it does not replace loading the dashboard in the target Grafana and checking tab order, selection links, queries, variables, and responsive layout.
