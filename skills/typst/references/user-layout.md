@@ -162,6 +162,61 @@ Cell alignment can be global, column-wise, or per cell:
 
 Use `auto` tracks for fit-to-content, `fr` tracks for proportional fill, and fixed/relative tracks when the document needs a stable grid.
 
+## Card Helpers In Grids: Width And Internal Spacing
+
+Two failure modes recur when a card/tile helper built from `block(...)` is placed into grid tracks.
+
+### Auto-Width Blocks Shrink-Wrap
+
+A `block` without an explicit `width` sizes to its content, even inside an equal `1fr` grid track. A row of cards then renders with unequal widths and ragged gutters because each box hugs its own text.
+
+Give card helpers `width: 100%` so each card fills its track:
+
+```typst
+#let metric-card(value, label) = block(
+  width: 100%, // without this the card shrink-wraps to its text
+  height: 1.1in,
+  inset: 8pt,
+  radius: 4pt,
+  fill: white,
+)[
+  ...
+]
+
+#grid(
+  columns: (1fr, 1fr, 1fr),
+  gutter: 8pt,
+  metric-card([671], [Dashboards]),
+  ...,
+)
+```
+
+Content that wraps (long paragraphs) can mask the bug: paragraphs fill the available width, so text-heavy cards look full-width while short-text cards shrink. Fix the helper, not the call sites.
+
+### Paragraph Spacing Dominates Inside Cards
+
+Separate `#text(...)` elements on their own markup lines with `v(...)` between them become separate paragraphs. The visible gap between them is then dominated by `par.spacing` (default `1.2em`, resolved against the surrounding text size — about 19pt in a 16pt document), not by a small explicit `v(0.03in)`. Tiny intended gaps silently become huge ones.
+
+Take control of paragraph spacing inside the helper:
+
+```typst
+#let metric-card(value, label) = block(width: 100%, height: 1.1in, inset: 8pt)[
+  #set par(spacing: 0pt) // gaps now come only from explicit v(...)
+  #align(center + horizon)[
+    #text(size: 25pt, weight: "bold", value)
+    #v(0.08in)
+    #text(size: 13pt, label)
+  ]
+]
+```
+
+Rules of thumb:
+
+- In a fixed-height card, top-aligned content piles all leftover space at the bottom. Use `align(center + horizon)` for stat tiles.
+- For title-plus-body cards, set a moderate `par(spacing: 0.5em)` in the helper so the title–body gap stays proportionate.
+- When one card body legitimately holds several paragraphs that should spread out in a tall fixed-height card, scope larger spacing to that body (`#set par(spacing: 1.1em)` at the start of the content block) instead of reverting the helper default.
+- A helper change restyles every call site. Render each page that uses the helper to PNG and inspect before reporting done.
+
 ## Measuring And Reactive Layout
 
 `measure` needs context when used in document flow because final sizes depend on styles and placement:
@@ -193,3 +248,5 @@ Use `layout` when a custom element needs access to the available region:
 - Make a table column fill remaining width: use `1fr`.
 - Make a label fit its text: use `auto`.
 - Make a figure scale to text width: use `image(..., width: 100%)` inside the figure.
+- Cards in equal grid tracks render with unequal widths: add `width: 100%` to the card `block`.
+- A gap inside a card is far larger than its explicit `v(...)`: set `par(spacing: ...)` inside the card helper.
