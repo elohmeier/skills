@@ -1,6 +1,6 @@
 ---
 name: typst
-description: Use when helping users write, debug, format, or structure Typst documents, templates, packages, and snippets, especially layout, alignment, boxes, blocks, pages, tables, figures, headings, citations, math, styling with set/show rules, context, measurements, and Typst scripting.
+description: Use when helping users write, debug, format, or structure Typst documents, templates, packages, and snippets, including presentation diagrams and iconography with Fletcher and Lucide; especially layout, alignment, boxes, blocks, pages, tables, figures, headings, citations, math, styling with set/show rules, context, measurements, and Typst scripting.
 ---
 
 # Typst
@@ -11,6 +11,7 @@ Use this skill for authoring Typst documents and reusable Typst code. Prefer idi
 
 - For day-to-day Typst authoring, read `references/user-authoring.md`.
 - For layout, alignment, sizing, boxes, blocks, pages, tables, and measurements, read `references/user-layout.md`.
+- For presentation diagrams, flowcharts, and iconography with Fletcher and Lucide, read `references/fletcher-and-lucide.md` together with `references/user-layout.md`.
 - For visual or structural verification of a document (PNG rendering, `typst query`, location/measure extraction), read `references/render-and-inspect.md`.
 - For compiler or standard-library code changes in this repository, read `references/layout-internals.md` and `references/api-and-tests.md` only after confirming the task is about Typst implementation.
 
@@ -21,7 +22,7 @@ Use this skill for authoring Typst documents and reusable Typst code. Prefer idi
 3. For formatting/layout questions, reason from the actual Typst layout model: inline vs block content, paragraph creation, relative sizing, alignment, and context.
 4. Provide complete Typst snippets that can be pasted into a `.typ` file. Keep examples minimal but compilable.
 5. When changing an existing document, preserve the user's structure and style unless it is the source of the bug.
-6. After non-trivial layout, table, figure, or pagination changes, render the affected page(s) to PNG (`typst compile --pages N --ppi 144 in.typ out-{p}.png`) and Read the image before reporting done. Use `typst query` to confirm structural changes (heading order, figure numbering, label resolution). See `references/render-and-inspect.md`.
+6. After non-trivial layout, table, figure, diagram, icon, or pagination changes, render the affected page(s) to PNG (`typst compile --pages N --ppi 144 in.typ out-{p}.png`) and Read the image before reporting done. Use `typst query` to confirm structural changes (heading order, figure numbering, label resolution). See `references/render-and-inspect.md`.
 
 ## Core Mental Model
 
