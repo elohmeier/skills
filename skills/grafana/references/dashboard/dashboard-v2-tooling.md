@@ -1,6 +1,6 @@
 # Stable Dashboard v2 Tooling
 
-Use `scripts/dashboard-v2` for stable `dashboard.grafana.app/v2` conversion, local validation, strict live validation, and conversion-first Jsonnet rendering. The tool imports Grafana's own dashboard migration, conversion, generated Go types, and embedded CUE validator at the exact module revision printed by:
+Use `scripts/dashboard-v2` for stable `dashboard.grafana.app/v2` conversion, canonical and code-editor validation, strict live validation, and conversion-first Jsonnet rendering. The tool imports Grafana's own dashboard migration, conversion, generated Go types, OpenAPI definitions, and embedded CUE validator at the exact module revision printed by:
 
 ```bash
 scripts/dashboard-v2 version
@@ -89,7 +89,16 @@ scripts/dashboard-v2 validate --input dashboard.v2.json --input-format resource
 scripts/dashboard-v2 validate --input dashboard-spec.json --input-format spec
 ```
 
-This is deterministic and offline after Go has populated its module cache. It validates the schema model but cannot reproduce every API-server admission rule or installed-plugin constraint.
+This is deterministic and offline after Go has populated its module cache. It validates the canonical schema model but cannot reproduce every API-server admission rule, installed-plugin constraint, or client-side editor restriction.
+
+Grafana's v2 code editor converts the served OpenAPI definitions into Draft-07 JSON Schema and applies several frontend-specific schema repairs before registering the result with Monaco. Run the separate editor compatibility check before pasting or applying JSON in that editor:
+
+```bash
+scripts/dashboard-v2 validate-editor --input dashboard.v2.json --input-format resource
+scripts/dashboard-v2 validate-editor --input dashboard-spec.json --input-format spec
+```
+
+`validate-editor` first runs canonical validation and the layout audit, then reproduces the pinned editor schema conversion. Keep it separate from `validate`: editor compatibility can be stricter than the canonical v2 contract. For example, the pinned Grafana editor rejects `null` threshold values as non-numeric even though the CUE contract defines `null` as the negative-infinity threshold. Treat such failures as compatibility errors for dashboards that must pass through the editor.
 
 The authoritative check is Grafana's stable-v2 resource API with strict field validation and a dry run:
 

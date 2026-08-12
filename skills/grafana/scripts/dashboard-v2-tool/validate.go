@@ -43,6 +43,37 @@ func runValidate(args []string) error {
 	return nil
 }
 
+func runValidateEditor(args []string) error {
+	fs := newFlagSet("validate-editor")
+	input := fs.String("input", "", "input JSON file, or - for stdin")
+	inputFormat := fs.String("input-format", "resource", "resource or spec")
+	if err := fs.Parse(args); err != nil {
+		return err
+	}
+	if fs.NArg() != 0 {
+		return errors.New("validate-editor accepts options only")
+	}
+	data, err := readBytes(*input)
+	if err != nil {
+		return err
+	}
+	dashboard, err := decodeV2(data, *inputFormat)
+	if err != nil {
+		return err
+	}
+	if errs := dashv2.ValidateDashboardSpec(dashboard); len(errs) > 0 {
+		return fmt.Errorf("local Grafana v2 validation failed before editor validation: %s", joinFieldErrors(errs))
+	}
+	if err := auditV2Integrity(dashboard); err != nil {
+		return err
+	}
+	if err := validateGrafanaEditorCompatibility(data, *inputFormat); err != nil {
+		return err
+	}
+	fmt.Printf("%s: accepted by Grafana v2 code editor schema\n", displayPath(*input))
+	return nil
+}
+
 func decodeV2(data []byte, inputFormat string) (*dashv2.Dashboard, error) {
 	decoder := json.NewDecoder(bytes.NewReader(data))
 	decoder.DisallowUnknownFields()

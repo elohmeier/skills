@@ -41,6 +41,8 @@ func run(args []string) error {
 		return runRender(args[1:])
 	case "validate":
 		return runValidate(args[1:])
+	case "validate-editor":
+		return runValidateEditor(args[1:])
 	case "validate-live":
 		return runValidateLive(args[1:])
 	case "export-context":
@@ -67,6 +69,7 @@ Commands:
   convert          Convert classic JSON or a v1 resource to stable v2
   render           Convert a baseline, then apply a Jsonnet patch to its stable-v2 spec
   validate         Validate with Grafana's pinned stable-v2 Go types and CUE validator
+  validate-editor  Validate against the schema used by Grafana's v2 code editor
   validate-live    Validate a v2 resource through Grafana's strict dry-run API
   export-context   Export conversion context from a live Grafana instance
   version          Print the pinned Grafana dashboard module version

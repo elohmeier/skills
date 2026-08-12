@@ -1,6 +1,6 @@
 ---
 name: grafana
-description: Work with Grafana dashboards and Grafana app plugins. Use when Codex needs to design, review, create, edit, convert, or validate dashboard JSON and panels, including stable dashboard.grafana.app/v2 conversion and validation, native tabbed layouts, table/stat sparklines, and live visible-data checks; tune PromQL-backed dashboards, transformations, variables, thresholds, legends, tables, and links; or build Grafana app plugins with @grafana/scenes, including SceneApp routing, breadcrumbs, SceneAppPage tabs and drilldowns, EmbeddedScene composition, VizPanel/PanelBuilders, scene variables, SceneQueryRunner, SceneDataTransformer, layouts, custom SceneObjectBase classes, behaviors, URL sync, and @grafana/scenes-react.
+description: Work with Grafana dashboards and Grafana app plugins. Use when Codex needs to design, review, create, edit, convert, or validate dashboard JSON and panels, including stable dashboard.grafana.app/v2 conversion, canonical and Grafana code-editor compatibility validation, native tabbed layouts, table/stat sparklines, and live visible-data checks; tune PromQL-backed dashboards, transformations, variables, thresholds, legends, tables, and links; or build Grafana app plugins with @grafana/scenes, including SceneApp routing, breadcrumbs, SceneAppPage tabs and drilldowns, EmbeddedScene composition, VizPanel/PanelBuilders, scene variables, SceneQueryRunner, SceneDataTransformer, layouts, custom SceneObjectBase classes, behaviors, URL sync, and @grafana/scenes-react.
 ---
 
 # Grafana
@@ -87,6 +87,7 @@ Dashboard schema validation:
 - Read `references/dashboard/dashboard-v2-tooling.md` before converting or generating v2 JSON.
 - Use `scripts/dashboard-v2 convert` for classic or v1 inputs. It runs Grafana's pinned migration and direct stable-v2 converter, requires a complete datasource/library context, validates with Grafana's CUE validator, and fails its own preservation audit. Do not convert dashboards with Jsonnet.
 - Use `scripts/dashboard-v2 validate` for deterministic local checks against the pinned stable-v2 Go types and Grafana validator. Pass `--input-format resource` or `--input-format spec` explicitly.
+- Use `scripts/dashboard-v2 validate-editor` before pasting or applying v2 JSON through Grafana's code editor. It reproduces the pinned editor's OpenAPI-to-Draft-07 schema conversion and can reject JSON that the canonical CUE validator accepts.
 - Use `scripts/dashboard-v2 validate-live` for the authoritative `dryRun=All&fieldValidation=Strict` check against the target Grafana namespace.
 - Stable v2 is the target. Do not produce `v2alpha1` or `v2beta1` for new work and do not preserve obsolete helper interfaces.
 
