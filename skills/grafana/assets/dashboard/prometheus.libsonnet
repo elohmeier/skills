@@ -97,15 +97,68 @@
     data: $.queryGroup(queries, transformations, queryOptions),
   },
 
-  labelsToFields(valueLabel='metric'):: {
+  labelsToFields():: {
     kind: 'Transformation',
     group: 'labelsToFields',
     spec: {
       options: {
-        valueLabel: valueLabel,
+        mode: 'columns',
       },
     },
   },
+
+  byRefId(refIdOrPattern):: {
+    id: 'byRefId',
+    options: refIdOrPattern,
+  },
+
+  mergedRefIdPattern(refId):: '/^(?:' + refId + '|merge-' + refId + '(?:-' + refId + ')*)$/',
+
+  mergeByRefId(refId):: {
+    kind: 'Transformation',
+    group: 'merge',
+    spec: {
+      filter: $.byRefId(refId),
+      options: {},
+    },
+  },
+
+  organizeMetricByRefId(refId, displayName, excludeByName={}):: {
+    kind: 'Transformation',
+    group: 'organize',
+    spec: {
+      filter: $.byRefId($.mergedRefIdPattern(refId)),
+      options: {
+        excludeByName: excludeByName,
+        renameByName: { Value: displayName },
+      },
+    },
+  },
+
+  joinByField(field, mode='outer'):: {
+    kind: 'Transformation',
+    group: 'joinByField',
+    spec: {
+      options: {
+        byField: field,
+        mode: mode,
+      },
+    },
+  },
+
+  // Use after one instant/table query per numeric column. Each column is
+  // { refId: 'A', displayName: 'State' }. Append a final organize transform.
+  metricTableTransforms(columns, joinField='source', excludeByName={})::
+    [$.labelsToFields()]
+    + [
+      transform
+      for column in columns
+      for transform in [
+        $.mergeByRefId(column.refId),
+        $.organizeMetricByRefId(column.refId, column.displayName, excludeByName),
+      ]
+    ]
+    + [$.joinByField(joinField)],
 
   filterFieldsByName(names):: {
     kind: 'Transformation',
@@ -137,30 +190,13 @@
     },
   },
 
-  tablePivot(names, valueLabel='metric'):: [
-    $.labelsToFields(valueLabel),
+  // Single-query table shaping only. For different metrics, use
+  // metricTableTransforms with one query per numeric column.
+  tablePivot(names):: [
+    $.labelsToFields(),
     $.filterFieldsByName(names),
     $.organize(names),
   ],
-
-  metricColumn(expr, column)::
-    std.format('label_replace(%s, "metric", "%s", "", "")', [expr, column]),
-
-  metricColumns(columns)::
-    std.join(' or ', [$.metricColumn(column.expr, column.column) for column in columns]),
-
-  tablePanel(expr, columns, datasourceUid=$.defaultDatasourceUid, refId='A'):: $.panelData(
-    [
-      $.panelQuery(
-        refId,
-        expr,
-        datasourceUid=datasourceUid,
-        format='table',
-        instant=true
-      ),
-    ],
-    $.tablePivot(columns)
-  ),
 
   timeSeriesPanel(queries):: $.panelData(queries),
 

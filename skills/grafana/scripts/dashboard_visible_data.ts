@@ -383,7 +383,7 @@ function dashboardQueryResultToJson(result: DashboardQueryResult): DashboardVisi
   };
 }
 
-function initGrafanaDataForCli(): void {
+export function initGrafanaDataForCli(): void {
   ((globalThis as unknown) as { window?: Record<string, unknown> }).window ??= {};
   const globals = globalThis as unknown as { __dashboardVisibleDataInitialized?: boolean };
   if (globals.__dashboardVisibleDataInitialized) {
@@ -1016,11 +1016,23 @@ async function processPanelResult(result: PanelResult, variables: Record<string,
   result.frames = frames;
 }
 
-function materializeJoinLabelFields(frames: DataFrame[], transformations: JsonObject[]): DataFrame[] {
+export function materializeJoinLabelFields(frames: DataFrame[], transformations: JsonObject[]): DataFrame[] {
   const joinFields = new Set<string>();
-  for (const transformation of transformations) {
+  for (let index = 0; index < transformations.length; index++) {
+    const transformation = transformations[index];
     const id = transformationId(transformation);
     if (id !== "seriesToColumns" && id !== "joinByField") {
+      continue;
+    }
+    const labelsAlreadyMaterialized = transformations.slice(0, index).some((candidate) => {
+      const options = transformationOptions(candidate);
+      return (
+        transformationId(candidate) === "labelsToFields" &&
+        !transformationFilter(candidate) &&
+        asText(options.mode) !== "rows"
+      );
+    });
+    if (labelsAlreadyMaterialized) {
       continue;
     }
     const byField = asText(transformationOptions(transformation).byField);
@@ -1127,7 +1139,7 @@ function normalizeSeriesToColumnsValueFields(frames: DataFrame[], transformation
   });
 }
 
-async function applyGrafanaTransformations(
+export async function applyGrafanaTransformations(
   frames: DataFrame[],
   transformations: JsonObject[],
   variables: Record<string, TemplateValue>,
@@ -1148,7 +1160,12 @@ async function applyGrafanaTransformations(
       warnings.push(`unsupported transformation ${JSON.stringify(id)}; output may be raw for that step`);
       continue;
     }
-    configs.push({ id, options: transformationOptions(transformation) });
+    const config: DataTransformerConfig = { id, options: transformationOptions(transformation) };
+    const filter = transformationFilter(transformation);
+    if (filter) {
+      config.filter = filter;
+    }
+    configs.push(config);
   }
   if (!configs.length) {
     return frames;
@@ -1305,6 +1322,13 @@ function transformationOptions(transform: JsonObject): JsonObject {
   }
   const spec = isObject(transform.spec) ? transform.spec : {};
   return isObject(spec.options) ? spec.options : {};
+}
+
+function transformationFilter(transform: JsonObject): DataTransformerConfig["filter"] | undefined {
+  const spec = isObject(transform.spec) ? transform.spec : {};
+  const filter = isObject(transform.filter) ? transform.filter : isObject(spec.filter) ? spec.filter : undefined;
+  const id = filter ? asText(filter.id) : "";
+  return id ? { id, options: filter?.options } : undefined;
 }
 
 function panelIsTableLike(panel: Panel, frames: DataFrame[]): boolean {

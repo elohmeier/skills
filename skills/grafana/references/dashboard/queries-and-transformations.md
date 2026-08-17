@@ -11,6 +11,7 @@ Use this for query shaping, Prometheus details, series naming, transformations, 
 - [Transformation rules](#transformation-rules)
 - [Common transformations](#common-transformations)
 - [Table handling](#table-handling)
+- [Multi-metric Prometheus inventory tables](#multi-metric-prometheus-inventory-tables)
 - [Field overrides and display](#field-overrides-and-display)
 - [Troubleshooting](#troubleshooting)
 
@@ -117,6 +118,56 @@ Use this for query shaping, Prometheus details, series naming, transformations, 
 - For a table sparkline, keep a range query, run `timeSeriesTable`, and override only its `Trend #<refId>` field. Defaults should keep ordinary label columns at cell type `auto`.
 - For a stat sparkline, keep the original range field and let stat `reduceOptions` calculate the displayed value; an upstream `reduce` transform removes the history.
 - Read [tables-and-sparklines.md](tables-and-sparklines.md) before authoring sparkline JSON or Scenes table builders.
+
+## Multi-Metric Prometheus Inventory Tables
+
+A common failure mode is an inventory table with one row per metric instead of one row per entity. It usually looks like repeated host or appliance rows ending in a generic `Value` column.
+
+Do not build this table by unioning differently named metrics with a synthetic label and expecting `labelsToFields.options.valueLabel` to turn that label into numeric column names. That path is version-sensitive: the datasource can keep every numeric sample named `Value`, and `merge` cannot combine rows whose synthetic metric-label values differ. Hiding that label then makes the duplicates look unexplained.
+
+Use this pipeline instead:
+
+1. Return one instant/table query per logical numeric column with stable refIds such as `A`, `B`, and `C`.
+2. Run one unfiltered `labelsToFields` transformation in `columns` mode so Prometheus labels become fields.
+3. For each refId, run a `merge` filtered with `{ id: "byRefId", options: "A" }`, then an `organize` filtered to both the original and merged refIds. Rename that frame's `Value` display name to the intended column name.
+4. Join the prepared frames with `joinByField` in `outer` mode on a stable entity key such as `source` or `instance`.
+5. Finish with one unfiltered `organize` for the final column order, hidden labels, and friendly inventory names.
+
+Merged frame refIds depend on the number of returned series. A filter that matches only `A` can work for one entity and fail for several. Match the original and generated forms, for example `/^(?:A|merge-A(?:-A)*)$/`. Test both a broad scope and exactly one entity.
+
+For stable v2, the filtered pair has this shape; repeat it for every query before the outer join:
+
+```json
+[
+  {
+    "kind": "Transformation",
+    "group": "merge",
+    "spec": {
+      "filter": { "id": "byRefId", "options": "A" },
+      "options": {}
+    }
+  },
+  {
+    "kind": "Transformation",
+    "group": "organize",
+    "spec": {
+      "filter": {
+        "id": "byRefId",
+        "options": "/^(?:A|merge-A(?:-A)*)$/"
+      },
+      "options": {
+        "renameByName": { "Value": "NTP state" }
+      }
+    }
+  }
+]
+```
+
+Use `joinByField`, not a final `merge`, after the per-query renames. Organize can preserve the raw `Value` field name while assigning distinct display names; an outer join retains those fields, whereas a merge can collapse same-named numeric fields. Put wide inventory labels on one authoritative query when possible and keep the other metric queries grouped only by the entity key. This reduces duplicate join columns.
+
+When authoring stable v2 with Jsonnet, `assets/dashboard/prometheus.libsonnet` provides `metricTableTransforms`, `mergeByRefId`, `organizeMetricByRefId`, and `joinByField` helpers for this pattern. Its `tablePivot` helper is intentionally limited to a single query.
+
+Validate the table with normal multi-entity data, one entity, partial metrics, empty results, and query errors. Run the visible-data tool with `--raw-frames` first so the datasource frames can be compared with the transformed frames.
 
 ## Field Overrides And Display
 

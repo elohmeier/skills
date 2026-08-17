@@ -4,6 +4,7 @@
   "type": "module",
   "scripts": {
     "dashboard-visible-data": "tsx dashboard_visible_data.ts",
+    "test": "tsx --test dashboard_visible_data.test.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

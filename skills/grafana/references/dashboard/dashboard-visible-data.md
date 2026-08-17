@@ -83,6 +83,10 @@ Run `dashboard_visible_data.ts --help` for the full CLI.
 
 The script reads saved variable values but does not execute dashboard variable queries. Override datasource and scope variables with `--var`, especially when a reusable dashboard has empty defaults.
 
+For a multi-query table, start with `--raw-frames` and compare the entity and frame counts before and after transformations. Repeated entity rows plus one generic `Value` column usually mean a metric-label pivot did not produce distinct value fields. Prefer one query per numeric column, refId-filtered preparation, and an outer `joinByField`; see [queries-and-transformations.md](queries-and-transformations.md#multi-metric-prometheus-inventory-tables).
+
+The script honors classic top-level transformation filters and stable-v2 `spec.filter` values. Check refId-filtered pipelines with both one returned series and several returned series because `merge` can produce refIds such as `A` or `merge-A-A-A` depending on the result shape.
+
 ## Interpret results
 
 Exit status `0` means every selected panel query completed without a reported query error. Exit status `1` means at least one panel returned an error. CLI or connection failures return `2`.
@@ -95,5 +99,6 @@ Review more than the exit status:
 - Do variable overrides select the expected series without unbounded expansion?
 - Are empty frames, datasource errors, and partial results recognizable?
 - Are series and row counts within the performance budget?
+- For joined inventory tables, is there exactly one row per entity and one distinctly named field per metric?
 
 The script approximates Grafana's visible-data pipeline with `@grafana/data`; it does not render panel plugin UI, evaluate browser layout, exercise data links, or prove accessibility. For v2 dashboards, it preserves layout order but does not emulate the selected tab, section-variable scope, repeats, or conditional rendering; select panel IDs and pass variable overrides explicitly. Unsupported transformations produce warnings and may leave output raw for that step. Pair it with schema validation and a browser review for representative tasks and failure states.
