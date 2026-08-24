@@ -19,6 +19,7 @@ npx skills add elohmeier/skills -s typst -a claude-code -g
 | Name                    | Purpose                                             |
 | ----------------------- | --------------------------------------------------- |
 | `agent-browser`         | Browser automation via `agent-browser` CLI          |
+| `chezmoi`               | Safe chezmoi dotfile workflows and troubleshooting  |
 | `fabric`                | Fabric.js geometry, rendering, serialization quirks |
 | `grafana`               | Grafana dashboards and scenes app plugins           |
 | `human-centered-design` | Human-centered design, usability, and UX heuristics |
