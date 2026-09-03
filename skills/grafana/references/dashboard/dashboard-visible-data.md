@@ -87,9 +87,30 @@ For a multi-query table, start with `--raw-frames` and compare the entity and fr
 
 The script honors classic top-level transformation filters and stable-v2 `spec.filter` values. Check refId-filtered pipelines with both one returned series and several returned series because `merge` can produce refIds such as `A` or `merge-A-A-A` depending on the result shape.
 
+## Run Grafana's transformation editor diagnostics headlessly
+
+Use `scripts/dashboard_editor_diagnostics.ts` when the validation result must include messages rendered by Grafana's transformation editors. This is separate from the approximate visible-data renderer: by default it creates one synthetic frame per query, mounts the skill-pinned Grafana release's own transformation rows and lazy-loaded editors under jsdom, and collects every `role="alert"` inside an editor. It downloads and caches the pinned upstream source and frontend runtime on first use; later runs reuse the cache.
+
+Validate a bounded panel from the dashboard repository without a Grafana endpoint or source-path setting:
+
+```bash
+<grafana-skill>/scripts/node_modules/.bin/tsx \
+  <grafana-skill>/scripts/dashboard_editor_diagnostics.ts \
+  dashboards/service-red.json \
+  --panel-id 8
+```
+
+The synthetic frame shape makes transformation diagnostics deterministic and catches configurations that become ineffective with one frame, without encoding transformation-specific warning rules. It does not claim that a live datasource currently returns that shape.
+
+The command only selects panels that have transformations. By default, editor alerts and transformations missing from the upstream registry produce exit status `1`. Use `--report-only` when editor alerts should be reported without changing the exit status; registry errors still fail. CLI and harness failures return `2`. `--grafana-source` can override the automatically cached release for a trusted local checkout; it is not required for normal use.
+
+This check does not match warning text and has no transformation-specific validation rules. It executes Grafana's `TransformationOperationRows` and `TransformationOperationRow`, including preceding transformations and the current frame matcher, then renders the actual editor from `getStandardTransformers`. New upstream editor alerts therefore surface without a local ruleset.
+
+Editor diagnostics remain data-shape-dependent and deliberately cover the one-frame-per-query state. Use the separate visible-data CLI when current datasource results matter. A transformation editor that is quiet for the synthetic shape is not proof that it will be quiet for every runtime response.
+
 ## Interpret results
 
-Exit status `0` means every selected panel query completed without a reported query error. Exit status `1` means at least one panel returned an error. CLI or connection failures return `2`.
+For `dashboard_visible_data.ts`, exit status `0` means every selected panel query completed without a reported query error, `1` means at least one panel returned an error, and CLI or connection failures return `2`. For `dashboard_editor_diagnostics.ts`, `0` means no failing editor or registry diagnostics were found, `1` means diagnostics were found, and CLI or harness failures return `2`.
 
 Review more than the exit status:
 
@@ -101,4 +122,4 @@ Review more than the exit status:
 - Are series and row counts within the performance budget?
 - For joined inventory tables, is there exactly one row per entity and one distinctly named field per metric?
 
-The script approximates Grafana's visible-data pipeline with `@grafana/data`; it does not render panel plugin UI, evaluate browser layout, exercise data links, or prove accessibility. For v2 dashboards, it preserves layout order but does not emulate the selected tab, section-variable scope, repeats, or conditional rendering; select panel IDs and pass variable overrides explicitly. Unsupported transformations produce warnings and may leave output raw for that step. Pair it with schema validation and a browser review for representative tasks and failure states.
+The visible-data script approximates Grafana's visible-data pipeline with `@grafana/data`; it does not render panel plugin UI, evaluate browser layout, exercise data links, or prove accessibility. The editor-diagnostics script executes the upstream transformation/editor path but still does not render the visualization plugin or dashboard layout. For v2 dashboards, the tools preserve layout order but do not emulate the selected tab, section-variable scope, repeats, or conditional rendering; select panel IDs and pass variable overrides explicitly. Unsupported visible-data transformations produce warnings and may leave output raw for that step. Pair these checks with a browser review for representative tasks and failure states.

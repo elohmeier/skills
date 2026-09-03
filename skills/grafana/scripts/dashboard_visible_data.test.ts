@@ -1,14 +1,98 @@
 import assert from "node:assert/strict";
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
 import test from "node:test";
 
 import type { DataFrame } from "@grafana/data";
 
 import {
   applyGrafanaTransformations,
+  collectDashboardEditorDiagnosticsInput,
+  dataTransformerConfigs,
   initGrafanaDataForCli,
   materializeJoinLabelFields,
   type JsonObject,
 } from "./dashboard_visible_data.ts";
+
+test("editor diagnostics use synthetic frames without a Grafana endpoint", () => {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), "grafana-editor-synthetic-test-"));
+  const dashboard = path.join(directory, "dashboard.json");
+  fs.writeFileSync(dashboard, JSON.stringify({
+    title: "Synthetic diagnostics test",
+    panels: [{
+      id: 8,
+      title: "Status",
+      type: "table",
+      targets: [{ refId: "A", expr: "up" }, { refId: "B", expr: "process_start_time_seconds" }],
+      transformations: [{ id: "merge", options: {}, filter: { id: "byRefId", options: "A" } }],
+    }],
+  }));
+
+  try {
+    const captured = collectDashboardEditorDiagnosticsInput(dashboard, { panelId: "8" });
+    assert.deepEqual(captured.panels[0].frames, [
+      {
+        schema: {
+          name: "A",
+          refId: "A",
+          fields: [{ name: "Value", type: "number" }],
+        },
+        data: { values: [[1]] },
+      },
+      {
+        schema: {
+          name: "B",
+          refId: "B",
+          fields: [{ name: "Value", type: "number" }],
+        },
+        data: { values: [[2]] },
+      },
+    ]);
+  } finally {
+    fs.rmSync(directory, { recursive: true, force: true });
+  }
+});
+
+test("classic and stable-v2 transformations normalize to Grafana runtime configs", () => {
+  assert.deepEqual(
+    dataTransformerConfigs([
+      {
+        id: "merge",
+        options: { mode: "outer" },
+        filter: { id: "byRefId", options: "A" },
+        disabled: true,
+        topic: "series",
+      },
+      {
+        kind: "Transformation",
+        group: "organize",
+        spec: {
+          options: { renameByName: { Value: "State" } },
+          filter: { id: "byRefId", options: "B" },
+          disabled: false,
+          topic: "annotations",
+        },
+      },
+    ]),
+    [
+      {
+        id: "merge",
+        options: { mode: "outer" },
+        filter: { id: "byRefId", options: "A" },
+        disabled: true,
+        topic: "series",
+      },
+      {
+        id: "organize",
+        options: { renameByName: { Value: "State" } },
+        filter: { id: "byRefId", options: "B" },
+        disabled: false,
+        topic: "annotations",
+      },
+    ],
+  );
+});
 
 function prometheusFrame(refId: string, source: string, value: number): DataFrame {
   return {

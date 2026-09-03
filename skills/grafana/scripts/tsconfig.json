@@ -10,5 +10,5 @@
     "target": "ES2023",
     "types": ["node"]
   },
-  "include": ["dashboard_visible_data.ts"]
+  "include": ["dashboard_editor_diagnostics.ts", "dashboard_visible_data.ts"]
 }

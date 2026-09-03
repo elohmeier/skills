@@ -1,6 +1,7 @@
 #!/usr/bin/env tsx
 import type {
   DataFrame,
+  DataFrameJSON,
   DataTransformerConfig,
   Field,
   FieldConfigPropertyItem,
@@ -183,6 +184,7 @@ interface PanelResult {
   frames: DataFrame[];
   errors: string[];
   warnings: string[];
+  queryTargets: JsonObject[];
 }
 
 export interface DashboardVisibleDataOptions {
@@ -199,6 +201,21 @@ export interface DashboardVisibleDataOptions {
   rawFrames?: boolean;
   timeout?: number;
   concurrency?: number;
+}
+
+export interface DashboardEditorDiagnosticsPanelInput {
+  id: string;
+  title: string;
+  targets: JsonObject[];
+  transformations: DataTransformerConfig[];
+  frames: DataFrameJSON[];
+}
+
+export interface DashboardEditorDiagnosticsInput {
+  schemaVersion: 1;
+  dashboard: string;
+  variables: JsonObject[];
+  panels: DashboardEditorDiagnosticsPanelInput[];
 }
 
 export interface FrameJson {
@@ -316,6 +333,60 @@ export async function collectDashboardVisibleData(
   return dashboardQueryResultToJson(await queryDashboardVisibleData(dashboardPath, options));
 }
 
+export function collectDashboardEditorDiagnosticsInput(
+  dashboardPath: string,
+  options: DashboardVisibleDataOptions = {},
+): DashboardEditorDiagnosticsInput {
+  const payload = loadJson(repoPath(dashboardPath));
+  const [shape, dashboard] = unwrapDashboard(payload);
+  let panels = collectPanels(shape, dashboard, {
+    includeHiddenTargets: Boolean(options.includeHiddenTargets),
+    includeCollapsed: Boolean(options.includeCollapsed),
+  });
+  panels = filterPanelsByType(panels, options.panelTypes || []);
+  panels = selectPanel(panels, options.panelId);
+  if (options.panelIds !== undefined) {
+    panels = selectPanels(panels, options.panelIds, true);
+  }
+  panels = panels.filter((panel) => panel.transformations.length > 0 && panel.targets.length > 0);
+  if (!panels.length && !options.allowNoQueryable) {
+    throw new DashboardDataError("no queryable panels with transformations matched");
+  }
+
+  const variables = collectVariables(shape, dashboard);
+  Object.assign(variables, parseVarOverrides(options.vars || []));
+
+  return {
+    schemaVersion: 1,
+    dashboard: asText(dashboard.title) || "(untitled dashboard)",
+    variables: templateVariableModels(variables),
+    panels: panels.map((panel) => {
+      const targets = prepareTargets(panel, variables);
+      return {
+        id: panel.id,
+        title: panel.title,
+        targets,
+        transformations: dataTransformerConfigs(panel.transformations),
+        frames: syntheticFrames(targets),
+      };
+    }),
+  };
+}
+
+function syntheticFrames(targets: JsonObject[]): DataFrameJSON[] {
+  return targets.map((target, index) => {
+    const refId = asText(target.refId) || String.fromCharCode("A".charCodeAt(0) + index);
+    return {
+      schema: {
+        name: refId,
+        refId,
+        fields: [{ name: "Value", type: FieldType.number }],
+      },
+      data: { values: [[index + 1]] },
+    };
+  });
+}
+
 async function queryDashboardVisibleData(
   dashboardPath: string,
   options: DashboardVisibleDataOptions,
@@ -333,7 +404,6 @@ async function queryDashboardVisibleData(
   if (options.panelIds !== undefined) {
     panels = selectPanels(panels, options.panelIds, true);
   }
-
   const queryable = panels.filter((panel) => panel.targets.length > 0);
   if (!queryable.length && !options.allowNoQueryable) {
     throw new DashboardDataError("no queryable panels matched");
@@ -560,6 +630,24 @@ function parseVarOverrides(items: string[]): Record<string, TemplateValue> {
     result[name] = new TemplateValue([value], value);
   }
   return result;
+}
+
+function templateVariableModels(variables: Record<string, TemplateValue>): JsonObject[] {
+  return Object.entries(variables).map(([name, variable]) => ({
+    type: "custom",
+    name,
+    multi: variable.multi,
+    includeAll: variable.isAll,
+    ...(variable.allValue ? { allValue: variable.allValue } : {}),
+    current: {
+      text: variable.text || variable.values.join(","),
+      value: variable.isAll
+        ? "$__all"
+        : variable.multi
+        ? variable.values
+        : variable.values[0] || "",
+    },
+  }));
 }
 
 function replaceVariables(value: string, variables: Record<string, TemplateValue>, scopedVars?: unknown): string {
@@ -926,8 +1014,9 @@ async function queryPanel(
     timeout: number;
   },
 ): Promise<PanelResult> {
-  const result: PanelResult = { panel, frames: [], errors: [], warnings: [] };
+  const result: PanelResult = { panel, frames: [], errors: [], warnings: [], queryTargets: [] };
   const targets = prepareTargets(panel, options.variables, options.stepMs);
+  result.queryTargets = targets;
   if (!targets.length) {
     result.warnings.push("panel has no visible query targets");
     return result;
@@ -952,7 +1041,6 @@ async function queryPanel(
     result.errors.push("Grafana returned a non-object JSON response");
     return result;
   }
-
   const [frames, errors] = framesFromResponse(response.json);
   result.frames = frames;
   result.errors.push(...errors);
@@ -1329,6 +1417,33 @@ function transformationFilter(transform: JsonObject): DataTransformerConfig["fil
   const filter = isObject(transform.filter) ? transform.filter : isObject(spec.filter) ? spec.filter : undefined;
   const id = filter ? asText(filter.id) : "";
   return id ? { id, options: filter?.options } : undefined;
+}
+
+export function dataTransformerConfigs(transformations: JsonObject[]): DataTransformerConfig[] {
+  return transformations.flatMap((transformation): DataTransformerConfig[] => {
+    const id = transformationId(transformation);
+    if (!id) {
+      return [];
+    }
+    const spec = isObject(transformation.spec) ? transformation.spec : {};
+    const config: DataTransformerConfig = {
+      id,
+      options: "options" in transformation ? transformation.options : spec.options ?? {},
+    };
+    const filter = transformationFilter(transformation);
+    if (filter) {
+      config.filter = filter;
+    }
+    const disabled = "disabled" in transformation ? transformation.disabled : spec.disabled;
+    if (typeof disabled === "boolean") {
+      config.disabled = disabled;
+    }
+    const topic = "topic" in transformation ? transformation.topic : spec.topic;
+    if (typeof topic === "string") {
+      config.topic = topic as DataTransformerConfig["topic"];
+    }
+    return [config];
+  });
 }
 
 function panelIsTableLike(panel: Panel, frames: DataFrame[]): boolean {
@@ -1905,7 +2020,7 @@ function parseResolveRules(value?: string): ResolveRule[] {
 async function grafanaJsonRequest(
   config: GrafanaConfig,
   token: string,
-  request: { method: "POST"; pathname: string; search?: string; body: unknown; timeout: number },
+  request: { method: "GET" | "POST"; pathname: string; search?: string; body?: unknown; timeout: number },
 ): Promise<{ statusCode: number; text: string; json: unknown }> {
   const attempts = 3;
   let lastError: unknown;
@@ -1926,17 +2041,19 @@ async function grafanaJsonRequest(
 async function grafanaJsonRequestOnce(
   config: GrafanaConfig,
   token: string,
-  request: { method: "POST"; pathname: string; search?: string; body: unknown; timeout: number },
+  request: { method: "GET" | "POST"; pathname: string; search?: string; body?: unknown; timeout: number },
 ): Promise<{ statusCode: number; text: string; json: unknown }> {
   const base = new URL(config.baseUrl);
   const isHttps = base.protocol === "https:";
-  const body = JSON.stringify(request.body);
+  const body = request.body === undefined ? undefined : JSON.stringify(request.body);
   const port = base.port ? Number.parseInt(base.port, 10) : isHttps ? 443 : 80;
   const headers: Record<string, string | number> = {
-    "Content-Type": "application/json",
     Accept: "application/json",
-    "Content-Length": Buffer.byteLength(body),
   };
+  if (body !== undefined) {
+    headers["Content-Type"] = "application/json";
+    headers["Content-Length"] = Buffer.byteLength(body);
+  }
   if (token) {
     headers.Authorization = `Bearer ${token}`;
   }
@@ -1991,7 +2108,9 @@ async function grafanaJsonRequestOnce(
     });
     req.on("timeout", () => req.destroy(new Error(`request timed out after ${request.timeout}s`)));
     req.on("error", reject);
-    req.write(body);
+    if (body !== undefined) {
+      req.write(body);
+    }
     req.end();
   });
 }

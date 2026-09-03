@@ -3,6 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "dashboard-editor-diagnostics": "tsx dashboard_editor_diagnostics.ts",
     "dashboard-visible-data": "tsx dashboard_visible_data.ts",
     "test": "tsx --test dashboard_visible_data.test.ts",
     "typecheck": "tsc --noEmit"

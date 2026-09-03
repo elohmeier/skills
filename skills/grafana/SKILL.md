@@ -94,8 +94,10 @@ Dashboard schema validation:
 Dashboard live-data validation:
 
 - Use `scripts/dashboard_visible_data.ts` after schema validation to query a live Grafana instance and inspect the values users receive after variables, standard transformations, field overrides, units, mappings, reducers, and table sorting.
-- The script supports classic and v2 dashboard JSON. Start with `--list-panels`, then select bounded panels, time ranges, and variable scopes. Do not run every panel against production by default.
-- Install its pinned Node dependencies from `scripts/package.json`. Set `GRAFANA_URL` and, when authentication is required, `GRAFANA_TOKEN`. Keep tokens out of arguments, output, and version control.
+- Use `scripts/dashboard_editor_diagnostics.ts` for panels with transformations when Grafana editor diagnostics must participate in validation. It supplies one synthetic frame per query and mounts the skill-pinned Grafana release's real transformation rows and editors under jsdom, so neither a Grafana server nor a source-path environment variable is required. It caches the pinned upstream source/runtime automatically on first use and fails on semantic editor alerts such as ineffective transformations. Do not replace it with dashboard-specific warning rules.
+- Both scripts support classic and v2 dashboard JSON. Start live-data work with `dashboard_visible_data.ts --list-panels`, then select bounded panels, time ranges, and variable scopes. Do not run every panel against production by default.
+- Install the pinned Node dependencies from `scripts/package.json`. Editor diagnostics need no connection configuration; configure `GRAFANA_URL` and `GRAFANA_TOKEN` only for the separate visible-data CLI. Keep tokens out of arguments, output, and version control.
+- The automatically cached Grafana release is trusted upstream code pinned by the skill. Use only a trusted checkout when overriding it with `--grafana-source`: the headless harness executes that checkout's Jest configuration and frontend code.
 - This is a data-pipeline check, not a browser renderer. Pair it with task-based browser checks for layout, interaction, links, themes, narrow widths, and accessibility. Read `references/dashboard/dashboard-visible-data.md` for setup, examples, limitations, and exit codes.
 
 ## Scenes App Track
